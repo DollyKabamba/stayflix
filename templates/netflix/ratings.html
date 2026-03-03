@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}Ratings & Audience — Netflix{% endblock %}
+{% block breadcrumb %}<span style="color:#E50914"><i class="fa-solid fa-circle-play" style="margin-right:4px"></i>Netflix</span> / Ratings & Audience{% endblock %}
+{% block content %}
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px">
+  <div class="kpi" style="border-top:2px solid #E50914">
+    <div class="stat-num" data-count="{{ s.most_common_count }}" style="font-size:24px;color:#fff;margin-bottom:4px">0</div>
+    <div style="font-size:10px;color:#334155;font-weight:700;text-transform:uppercase">Titres rating <span style="color:#E50914">{{ s.most_common }}</span></div>
+  </div>
+  <div class="kpi" style="border-top:2px solid #d97706">
+    <div class="stat-num" data-count="{{ s.ratings_total }}" style="font-size:24px;color:#fff;margin-bottom:4px">0</div>
+    <div style="font-size:10px;color:#334155;font-weight:700;text-transform:uppercase">Types de ratings distincts</div>
+  </div>
+  <div class="kpi" style="border-top:2px solid #7c3aed">
+    <div style="font-size:24px;font-weight:800;color:#fff;margin-bottom:4px"><span data-count="{{ s.grp_counts[3] if s.grp_counts|length > 3 else 0 }}">0</span></div>
+    <div style="font-size:10px;color:#334155;font-weight:700;text-transform:uppercase">Contenus Adultes (TV-MA, R…)</div>
+  </div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+  <div class="card" style="padding:16px">
+    <div class="ct"><i class="fa-solid fa-chart-pie" style="color:#eab308"></i>Distribution des ratings</div>
+    <canvas id="cRat" height="240"></canvas>
+  </div>
+  <div class="card" style="padding:16px">
+    <div class="ct"><i class="fa-solid fa-users" style="color:#7c3aed"></i>Groupes d'audience</div>
+    <canvas id="cGrp" height="240"></canvas>
+  </div>
+</div>
+<div style="display:grid;grid-template-columns:1.4fr 1fr;gap:12px">
+  <div class="card" style="padding:16px">
+    <div class="ct"><i class="fa-solid fa-chart-bar" style="color:#0891B2"></i>Films vs Séries par rating</div>
+    <canvas id="cPivot" height="200"></canvas>
+  </div>
+  <div class="card" style="padding:16px">
+    <div class="ct"><i class="fa-solid fa-clock" style="color:#d97706"></i>Durée moy. film par rating</div>
+    <canvas id="cDR" height="200"></canvas>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const s = {{ s | tojson }};
+new Chart('cRat',{type:'doughnut',data:{labels:s.rat_labels,datasets:[{data:s.rat_counts,backgroundColor:P,borderWidth:0,hoverOffset:5}]},options:{plugins:{legend:{position:'right',labels:{font:{size:11}}}},cutout:'55%',animation:{animateScale:true}}});
+new Chart('cGrp',{type:'bar',data:{labels:s.grp_labels,datasets:[{label:'Titres',data:s.grp_counts,backgroundColor:['#059669','#0891B2','#d97706','#E50914'],borderRadius:6,borderWidth:0}]},options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(255,255,255,.04)'}}}}});
+new Chart('cPivot',{type:'bar',data:{labels:s.pivot_labels,datasets:[{label:'Films',data:s.pivot_movies,backgroundColor:'rgba(229,9,20,.75)',borderRadius:3,borderWidth:0},{label:'Séries',data:s.pivot_shows,backgroundColor:'rgba(124,58,237,.75)',borderRadius:3,borderWidth:0}]},options:{scales:{x:{stacked:false,grid:{display:false},ticks:{font:{size:10}}},y:{grid:{color:'rgba(255,255,255,.04)'}}}}});
+new Chart('cDR',{type:'bar',data:{labels:s.dr_labels,datasets:[{label:'Durée min',data:s.dr_values,backgroundColor:'rgba(217,119,6,.75)',borderRadius:5,borderWidth:0}]},options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'}},y:{grid:{display:false},ticks:{font:{size:10}}}}}});
+</script>
+{% endblock %}

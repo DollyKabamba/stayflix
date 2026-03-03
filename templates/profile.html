@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}Mon Profil — StayFlix{% endblock %}
+{% block breadcrumb %}Mon Profil{% endblock %}
+{% block content %}
+<div style="max-width:600px">
+  <h2 style="font-size:18px;font-weight:800;color:#fff;margin-bottom:18px"><i class="fa-solid fa-circle-user" style="color:#7c3aed;margin-right:8px"></i>Mon Profil</h2>
+  {% if user %}
+  <div class="card" style="padding:24px;margin-bottom:14px">
+    <form method="POST" enctype="multipart/form-data">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div><label style="font-size:10px;font-weight:700;color:#334155;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px">Prénom</label><input name="first_name" value="{{ user.first_name or '' }}" class="inp" style="width:100%"></div>
+        <div><label style="font-size:10px;font-weight:700;color:#334155;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px">Nom</label><input name="last_name" value="{{ user.last_name or '' }}" class="inp" style="width:100%"></div>
+      </div>
+      <div style="margin-bottom:12px"><label style="font-size:10px;font-weight:700;color:#334155;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px">Email</label><input name="email" type="email" value="{{ user.email or '' }}" class="inp" style="width:100%"></div>
+      <div style="margin-bottom:18px">
+        <label style="font-size:10px;font-weight:700;color:#334155;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px">Rôle</label>
+        <div class="inp" style="background:rgba(255,255,255,.02);cursor:default;display:flex;align-items:center;gap:8px">
+          <span class="badge badge-{{ user.role }}">{{ user.role }}</span>
+          <span style="font-size:12px;color:#475569">{{ {'admin':'Accès complet','manager':'Gestion + Export','analyst':'Analyse + Admin','viewer':'Consultation uniquement'}[user.role] }}</span>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-red"><i class="fa-solid fa-floppy-disk"></i>Enregistrer les modifications</button>
+    </form>
+  </div>
+  <div class="card" style="padding:16px">
+    <div style="font-size:11px;font-weight:700;color:#334155;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Identifiant de connexion</div>
+    <div style="font-size:13px;color:#94a3b8">Username : <strong style="color:#e2e8f0">{{ user.username }}</strong></div>
+    <div style="font-size:11px;color:#1e293b;margin-top:6px">Pour modifier le mot de passe, contactez l'administrateur.</div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

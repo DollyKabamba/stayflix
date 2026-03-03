@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block title %}Explorateur Netflix — StayFlix{% endblock %}
+{% block breadcrumb %}<span style="color:#E50914"><i class="fa-solid fa-circle-play" style="margin-right:4px"></i>Netflix</span> / Explorateur avancé{% endblock %}
+{% block content %}
+<div class="card" style="padding:18px;margin-bottom:16px">
+  <div style="font-size:12px;font-weight:700;color:#fff;margin-bottom:12px"><i class="fa-solid fa-sliders" style="color:#E50914;margin-right:6px"></i>Filtres avancés</div>
+  <form method="GET" style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end">
+    <div><label style="font-size:9.5px;font-weight:700;color:#334155;text-transform:uppercase;display:block;margin-bottom:4px">Titre</label><input name="title" class="inp" style="width:160px" placeholder="Rechercher..." value="{{ current.get('title','') }}"></div>
+    <div><label style="font-size:9.5px;font-weight:700;color:#334155;text-transform:uppercase;display:block;margin-bottom:4px">Type</label><select name="type" class="inp" style="width:120px"><option value="">Tous</option>{% for t in types %}<option value="{{ t }}" {% if current.get('type')==t %}selected{% endif %}>{{ t }}</option>{% endfor %}</select></div>
+    <div><label style="font-size:9.5px;font-weight:700;color:#334155;text-transform:uppercase;display:block;margin-bottom:4px">Rating</label><select name="rating" class="inp" style="width:110px"><option value="">Tous</option>{% for r in ratings %}<option value="{{ r }}" {% if current.get('rating')==r %}selected{% endif %}>{{ r }}</option>{% endfor %}</select></div>
+    <div><label style="font-size:9.5px;font-weight:700;color:#334155;text-transform:uppercase;display:block;margin-bottom:4px">Année sortie min</label><input name="year_min" class="inp" style="width:110px" type="number" placeholder="ex: 2010" value="{{ current.get('year_min','') }}"></div>
+    <div><label style="font-size:9.5px;font-weight:700;color:#334155;text-transform:uppercase;display:block;margin-bottom:4px">Année sortie max</label><input name="year_max" class="inp" style="width:110px" type="number" placeholder="ex: 2021" value="{{ current.get('year_max','') }}"></div>
+    <div><label style="font-size:9.5px;font-weight:700;color:#334155;text-transform:uppercase;display:block;margin-bottom:4px">Durée min (min)</label><input name="dur_min" class="inp" style="width:110px" type="number" placeholder="ex: 90" value="{{ current.get('dur_min','') }}"></div>
+    <div><label style="font-size:9.5px;font-weight:700;color:#334155;text-transform:uppercase;display:block;margin-bottom:4px">Durée max (min)</label><input name="dur_max" class="inp" style="width:110px" type="number" placeholder="ex: 150" value="{{ current.get('dur_max','') }}"></div>
+    <div><label style="font-size:9.5px;font-weight:700;color:#334155;text-transform:uppercase;display:block;margin-bottom:4px">Saisons min</label><input name="seas_min" class="inp" style="width:100px" type="number" placeholder="ex: 3" value="{{ current.get('seas_min','') }}"></div>
+    <div><label style="font-size:9.5px;font-weight:700;color:#334155;text-transform:uppercase;display:block;margin-bottom:4px">Ajouté depuis</label><input name="ya_from" class="inp" style="width:110px" type="number" placeholder="ex: 2019" value="{{ current.get('ya_from','') }}"></div>
+    <div><label style="font-size:9.5px;font-weight:700;color:#334155;text-transform:uppercase;display:block;margin-bottom:4px">Trier par</label><select name="sort_by" class="inp" style="width:140px"><option value="release_year" {% if current.get('sort_by','release_year')=='release_year' %}selected{% endif %}>Année sortie</option><option value="duration_minutes" {% if current.get('sort_by')=='duration_minutes' %}selected{% endif %}>Durée</option><option value="year_added" {% if current.get('sort_by')=='year_added' %}selected{% endif %}>Ajouté Netflix</option></select></div>
+    <div><label style="font-size:9.5px;font-weight:700;color:#334155;text-transform:uppercase;display:block;margin-bottom:4px">Ordre</label><select name="order" class="inp" style="width:100px"><option value="desc" {% if current.get('order','desc')=='desc' %}selected{% endif %}>Décroissant</option><option value="asc" {% if current.get('order')=='asc' %}selected{% endif %}>Croissant</option></select></div>
+    <button type="submit" class="btn btn-red"><i class="fa-solid fa-magnifying-glass"></i>Chercher</button>
+    <a href="{{ url_for('netflix_search') }}" class="btn btn-ghost"><i class="fa-solid fa-rotate-left"></i>Reset</a>
+  </form>
+</div>
+
+{% if results is not none %}
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+  <div style="font-size:13px;color:#fff;font-weight:700"><span data-count="{{ qinfo.total }}" style="color:#E50914">0</span> résultat(s)</div>
+  <div style="font-size:12px;color:#334155">Films: <strong style="color:#7c3aed">{{ qinfo.movies }}</strong> · Séries: <strong style="color:#6366f1">{{ qinfo.shows }}</strong></div>
+</div>
+<div class="card" style="overflow:hidden">
+  <div style="overflow-x:auto">
+    <table class="tbl">
+      <thead><tr><th>Titre</th><th>Type</th><th>Rating</th><th>Sortie</th><th>Durée/Saisons</th><th>Ajouté Netflix</th></tr></thead>
+      <tbody>
+        {% for r in results %}
+        <tr>
+          <td style="color:#e2e8f0;font-weight:500;max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r.title }}</td>
+          <td><span style="font-size:10px;padding:2px 7px;border-radius:6px;font-weight:700;background:{{ 'rgba(229,9,20,.12)' if r.type=='Movie' else 'rgba(124,58,237,.12)' }};color:{{ '#E50914' if r.type=='Movie' else '#a78bfa' }}">{{ r.type }}</span></td>
+          <td><span style="font-size:10px;color:#fcd34d;font-weight:600">{{ r.rating or '–' }}</span></td>
+          <td>{{ r.release_year|int if r.release_year else '–' }}</td>
+          <td>{% if r.type=='Movie' %}{{ r.duration_minutes|int if r.duration_minutes else '–' }} min{% else %}{{ r.duration_seasons|int if r.duration_seasons else '–' }} saison(s){% endif %}</td>
+          <td style="font-size:11px;color:#334155">{{ r.year_added|int if r.year_added else '–' }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" style="text-align:center;padding:30px;color:#334155">Aucun résultat pour ces filtres</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="card" style="padding:40px;text-align:center">
+  <i class="fa-solid fa-magnifying-glass-chart" style="font-size:36px;color:#1e293b;margin-bottom:12px"></i>
+  <div style="font-size:14px;color:#334155">Utilisez les filtres ci-dessus pour explorer le catalogue Netflix</div>
+</div>
+{% endif %}
+{% endblock %}

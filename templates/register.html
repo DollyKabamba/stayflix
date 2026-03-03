@@ -1,0 +1,29 @@
+{% extends 'base_public.html' %}
+{% block title %}Inscription — StayFlix{% endblock %}
+{% block content %}
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px">
+  <div style="width:100%;max-width:400px;animation:fadeUp .5s ease">
+    <div style="text-align:center;margin-bottom:24px">
+      <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#E50914,#7c3aed);display:flex;align-items:center;justify-content:center;margin:0 auto 10px">
+        <i class="fa-solid fa-play" style="color:#fff;font-size:15px;margin-left:2px"></i>
+      </div>
+      <div style="font-size:20px;font-weight:900;color:#f1f5f9">StayFlix Analytics</div>
+    </div>
+    <div class="card" style="padding:24px">
+      <div style="font-size:15px;font-weight:700;color:#e2e8f0;margin-bottom:16px">Créer un compte</div>
+      <form method="POST">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+          <div><label style="font-size:10px;font-weight:600;color:#475569;display:block;margin-bottom:4px;text-transform:uppercase">Prénom</label><input name="first_name" class="inp" required></div>
+          <div><label style="font-size:10px;font-weight:600;color:#475569;display:block;margin-bottom:4px;text-transform:uppercase">Nom</label><input name="last_name" class="inp" required></div>
+        </div>
+        <div style="margin-bottom:10px"><label style="font-size:10px;font-weight:600;color:#475569;display:block;margin-bottom:4px;text-transform:uppercase">Identifiant</label><input name="username" class="inp" required></div>
+        <div style="margin-bottom:10px"><label style="font-size:10px;font-weight:600;color:#475569;display:block;margin-bottom:4px;text-transform:uppercase">Email</label><input name="email" type="email" class="inp" required></div>
+        <div style="margin-bottom:10px"><label style="font-size:10px;font-weight:600;color:#475569;display:block;margin-bottom:4px;text-transform:uppercase">Mot de passe</label><input name="password" type="password" class="inp" required></div>
+        <div style="margin-bottom:18px"><label style="font-size:10px;font-weight:600;color:#475569;display:block;margin-bottom:4px;text-transform:uppercase">Confirmer</label><input name="password2" type="password" class="inp" required></div>
+        <button type="submit" class="btn btn-red" style="width:100%"><i class="fa-solid fa-user-plus"></i>Créer mon compte</button>
+      </form>
+    </div>
+    <div style="text-align:center;margin-top:12px"><a href="{{ url_for('login') }}" style="font-size:12px;color:#334155;text-decoration:none">Déjà inscrit ? <span style="color:#E50914;font-weight:600">Se connecter</span></a></div>
+  </div>
+</div>
+{% endblock %}

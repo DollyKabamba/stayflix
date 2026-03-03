@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard Hôtel — StayFlix{% endblock %}
+{% block breadcrumb %}<span style="color:#0891B2"><i class="fa-solid fa-hotel" style="margin-right:4px"></i>Hôtel</span> / Dashboard{% endblock %}
+{% block content %}
+
+<!-- Filters -->
+<div class="fbar">
+  <i class="fa-solid fa-sliders" style="color:#0891B2;font-size:13px"></i>
+  <select id="fHotel" class="inp" style="width:150px" onchange="refresh()"><option value="">Tous les hôtels</option><option value="Resort Hotel">Resort Hotel</option><option value="City Hotel">City Hotel</option></select>
+  <select id="fMonth" class="inp" style="width:140px" onchange="refresh()"><option value="">Tous les mois</option>{% for m in s.all_months %}<option value="{{ m }}">{{ m }}</option>{% endfor %}</select>
+  <select id="fSeg" class="inp" style="width:150px" onchange="refresh()"><option value="">Tous segments</option>{% for seg in s.all_segments %}<option value="{{ seg }}">{{ seg }}</option>{% endfor %}</select>
+  <select id="fCtype" class="inp" style="width:150px" onchange="refresh()"><option value="">Tous types client</option>{% for ct in s.all_ctypes %}<option value="{{ ct }}">{{ ct }}</option>{% endfor %}</select>
+  <select id="fCancel" class="inp" style="width:160px" onchange="refresh()"><option value="">Toutes réservations</option><option value="0">Confirmées seul.</option><option value="1">Annulées seul.</option></select>
+  <button onclick="resetFilters()" class="btn btn-ghost" style="font-size:11.5px"><i class="fa-solid fa-rotate-left"></i>Reset</button>
+  <div id="fInfo" style="margin-left:auto;font-size:11.5px;color:#475569;font-weight:500"></div>
+</div>
+
+<!-- KPIs -->
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px">
+  <div class="kpi" style="border-top:2px solid #0891B2">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <div style="width:30px;height:30px;border-radius:8px;background:rgba(8,145,178,.1);display:flex;align-items:center;justify-content:center"><i class="fa-solid fa-hotel" style="color:#0891B2;font-size:12px"></i></div>
+    </div>
+    <div class="stat-num" id="kTotal" data-count="{{ s.total }}" style="font-size:26px;color:#fff;margin-bottom:3px">0</div>
+    <div style="font-size:10px;color:#334155;font-weight:700;text-transform:uppercase">Réservations totales</div>
+  </div>
+  <div class="kpi" style="border-top:2px solid #ef4444">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <div style="width:30px;height:30px;border-radius:8px;background:rgba(239,68,68,.1);display:flex;align-items:center;justify-content:center"><i class="fa-solid fa-ban" style="color:#ef4444;font-size:12px"></i></div>
+      <span style="font-size:9px;padding:2px 7px;border-radius:6px;font-weight:700;background:rgba(239,68,68,.1);color:#fca5a5">Risque</span>
+    </div>
+    <div style="font-size:26px;font-weight:800;color:#fff;margin-bottom:3px"><span id="kCancel" data-count="{{ s.cancel_rate }}" data-dec="1">0</span><span style="font-size:13px;color:#475569;font-weight:400"> %</span></div>
+    <div style="font-size:10px;color:#334155;font-weight:700;text-transform:uppercase">Taux d'annulation</div>
+  </div>
+  <div class="kpi" style="border-top:2px solid #d97706">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <div style="width:30px;height:30px;border-radius:8px;background:rgba(217,119,6,.1);display:flex;align-items:center;justify-content:center"><i class="fa-solid fa-coins" style="color:#d97706;font-size:12px"></i></div>
+    </div>
+    <div style="font-size:26px;font-weight:800;color:#fff;margin-bottom:3px"><span id="kADR" data-count="{{ s.avg_adr }}" data-dec="1">0</span><span style="font-size:13px;color:#475569;font-weight:400"> €</span></div>
+    <div style="font-size:10px;color:#334155;font-weight:700;text-transform:uppercase">ADR moyen (€/nuit)</div>
+  </div>
+  <div class="kpi" style="border-top:2px solid #059669">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <div style="width:30px;height:30px;border-radius:8px;background:rgba(5,150,105,.1);display:flex;align-items:center;justify-content:center"><i class="fa-solid fa-earth-europe" style="color:#059669;font-size:12px"></i></div>
+    </div>
+    <div class="stat-num" id="kCountries" data-count="{{ s.countries }}" style="font-size:26px;color:#fff;margin-bottom:3px">0</div>
+    <div style="font-size:10px;color:#334155;font-weight:700;text-transform:uppercase">Pays d'origine clients</div>
+  </div>
+</div>
+
+<!-- Charts Row 1 -->
+<div style="display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:12px;margin-bottom:12px">
+  <div class="card" style="padding:16px">
+    <div class="ct"><i class="fa-solid fa-chart-pie" style="color:#0891B2"></i>Répartition Resort vs City</div>
+    <canvas id="cHotel" height="220"></canvas>
+  </div>
+  <div class="card" style="padding:16px">
+    <div class="ct"><i class="fa-solid fa-tags" style="color:#7c3aed"></i>Segments de marché</div>
+    <canvas id="cSeg" height="220"></canvas>
+  </div>
+  <div class="card" style="padding:16px">
+    <div class="ct"><i class="fa-solid fa-calendar-days" style="color:#d97706"></i>Réservations par mois</div>
+    <canvas id="cMo" height="220"></canvas>
+  </div>
+</div>
+
+<!-- Charts Row 2 -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+  <div class="card" style="padding:16px">
+    <div class="ct"><i class="fa-solid fa-chart-line" style="color:#d97706"></i>ADR moyen par mois (€/nuit)</div>
+    <canvas id="cADRm" height="180"></canvas>
+  </div>
+  <div class="card" style="padding:16px">
+    <div class="ct"><i class="fa-solid fa-ban" style="color:#ef4444"></i>Taux d'annulation par hôtel</div>
+    <canvas id="cCRH" height="180"></canvas>
+  </div>
+</div>
+
+<!-- Insights -->
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+  {% for color, icon, title, val in [
+    ('#0891B2','fa-bed','Nuits moy.',s.avg_nights|string+' nuits'),
+    ('#7c3aed','fa-clock','Lead time moy.',s.avg_lead|string+' jours'),
+    ('#059669','fa-rotate','Clients fidèles',s.repeat_pct|string+'%'),
+    ('#d97706','fa-coins','Revenu total',(s.revenue/1000)|round(0)|int|string+'k€'),
+  ] %}
+  <div class="card" style="padding:14px;border-left:2px solid {{ color }}">
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><i class="fa-solid {{ icon }}" style="color:{{ color }};font-size:12px"></i><span style="font-size:10px;font-weight:700;color:#475569;text-transform:uppercase">{{ title }}</span></div>
+    <div style="font-size:18px;font-weight:800;color:#fff">{{ val }}</div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const S = {{ s | tojson }};
+let charts = {};
+
+function buildCharts(d) {
+  if(charts.hotel) charts.hotel.destroy();
+  charts.hotel = new Chart('cHotel',{type:'doughnut',data:{labels:d.hotel_labels||[],datasets:[{data:d.hotel_counts||[],backgroundColor:['#0891B2','#7c3aed'],borderWidth:0,hoverOffset:5}]},options:{plugins:{legend:{position:'bottom'}},cutout:'62%',animation:{animateScale:true}}});
+  if(charts.seg) charts.seg.destroy();
+  charts.seg = new Chart('cSeg',{type:'bar',data:{labels:d.ms_labels||[],datasets:[{label:'Réservations',data:d.ms_counts||[],backgroundColor:BP,borderRadius:4,borderWidth:0}]},options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'}},y:{grid:{display:false},ticks:{font:{size:10}}}}}});
+  if(charts.mo) charts.mo.destroy();
+  charts.mo = new Chart('cMo',{type:'bar',data:{labels:d.mo_labels||[],datasets:[{label:'Réservations',data:d.mo_counts||[],backgroundColor:GP,borderRadius:4,borderWidth:0}]},options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:10},maxRotation:45}},y:{grid:{color:'rgba(255,255,255,.04)'}}}}});
+  if(charts.adrm) charts.adrm.destroy();
+  charts.adrm = new Chart('cADRm',{type:'line',data:{labels:d.adrm_labels||[],datasets:[{label:'ADR €',data:d.adrm_values||[],borderColor:'#d97706',backgroundColor:'rgba(217,119,6,.07)',fill:true,tension:.4,borderWidth:2.5,pointRadius:3}]},options:{plugins:{legend:{display:false}},scales:{y:{grid:{color:'rgba(255,255,255,.04)'}},x:{grid:{display:false},ticks:{font:{size:10},maxRotation:45}}}}});
+  if(charts.crh) charts.crh.destroy();
+  charts.crh = new Chart('cCRH',{type:'bar',data:{labels:d.crh_labels||[],datasets:[{label:'Annulation %',data:d.crh_values||[],backgroundColor:['rgba(239,68,68,.75)','rgba(239,68,68,.5)'],borderRadius:6,borderWidth:0}]},options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(255,255,255,.04)'},max:100}}}});
+  // Update KPI counters
+  const upd = {kTotal:[d.total,0,''],kCancel:[d.cancel_rate,1,'%'],kADR:[d.avg_adr,1,'€'],kCountries:[d.countries,0,'']};
+  Object.entries(upd).forEach(([id,[val,dec,suf]])=>{const el=document.getElementById(id);if(el){el._c=0;animCount(el,val,800,'',suf,dec);}});
+  document.getElementById('fInfo').textContent = d.total<S.total ? `Filtre actif — ${d.total} réservations` : '';
+}
+
+function refresh() {
+  const params=new URLSearchParams();
+  const map={fHotel:'hotel',fMonth:'month',fSeg:'segment',fCtype:'ctype',fCancel:'canceled'};
+  Object.entries(map).forEach(([id,k])=>{const v=document.getElementById(id)?.value;if(v!==undefined&&v!=='')params.append(k,v);});
+  fetch('/api/hotel/stats?'+params).then(r=>r.json()).then(buildCharts);
+}
+
+function resetFilters() {
+  ['fHotel','fMonth','fSeg','fCtype','fCancel'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  buildCharts(S);
+}
+
+buildCharts(S);
+</script>
+{% endblock %}
