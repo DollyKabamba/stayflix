@@ -23,10 +23,11 @@
 {% block scripts %}
 <script>
 const s = {{ s | tojson }};
-new Chart('cCT',{type:'doughnut',data:{labels:s.ct_labels||[],datasets:[{data:s.ct_counts||[],backgroundColor:BP,borderWidth:0,hoverOffset:4}]},options:{plugins:{legend:{position:'right',labels:{font:{size:11}}}},cutout:'55%',animation:{animateScale:true}}});
-new Chart('cDC',{type:'bar',data:{labels:s.dc_labels||[],datasets:[{label:'Réservations',data:s.dc_counts||[],backgroundColor:PP,borderRadius:5,borderWidth:0}]},options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'}},y:{grid:{display:false},ticks:{font:{size:10}}}}}});
-new Chart('cNR',{type:'bar',data:{labels:s.nr_labels||[],datasets:[{label:'Réservations',data:s.nr_counts||[],backgroundColor:'rgba(217,119,6,.75)',borderRadius:5,borderWidth:0}]},options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(255,255,255,.04)'}}}}});
-new Chart('cLT',{type:'bar',data:{labels:s.lt_labels||[],datasets:[{label:'Lead time (jours)',data:s.lt_values||[],backgroundColor:GP,borderRadius:5,borderWidth:0}]},options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'}},y:{grid:{display:false},ticks:{font:{size:10}}}}}});
-new Chart('cRR',{type:'bar',data:{labels:s.rr_labels||[],datasets:[{label:'Chambres',data:s.rr_counts||[],backgroundColor:P,borderRadius:4,borderWidth:0}]},options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(255,255,255,.04)'}}}}});
+new Chart('cCT',{type:'doughnut',data:{labels:s.ct_labels,datasets:[{data:s.ct_counts,backgroundColor:BP,borderWidth:0,hoverOffset:4}]},options:{plugins:{legend:{position:'right',labels:{font:{size:11}}}},cutout:'55%',animation:{animateScale:true}}});
+new Chart('cDC',{type:'bar',data:{labels:s.dc_labels,datasets:[{label:'Réservations',data:s.dc_counts,backgroundColor:PP,borderRadius:5,borderWidth:0}]},options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'}},y:{grid:{display:false},ticks:{font:{size:10}}}}}});
+new Chart('cNR',{type:'bar',data:{labels:s.nr_labels,datasets:[{label:'Réservations',data:s.nr_counts,backgroundColor:'rgba(217,119,6,.75)',borderRadius:5,borderWidth:0}]},options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(255,255,255,.04)'}}}}});
+new Chart('cLT',{type:'bar',data:{labels:s.lt_labels,datasets:[{label:'Lead time (jours)',data:s.lt_values,backgroundColor:GP,borderRadius:5,borderWidth:0}]},options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'}},y:{grid:{display:false},ticks:{font:{size:10}}}}}});
+new Chart('cRR',{type:'bar',data:{labels:s.rr_labels,datasets:[{label:'Chambres',data:s.rr_counts,backgroundColor:P,borderRadius:4,borderWidth:0}]},options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(255,255,255,.04)'}}}}});
+const PP=['#7c3aed','#8b5cf6','#a78bfa','#c4b5fd','#ddd6fe'];
 </script>
 {% endblock %}

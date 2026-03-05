@@ -34,9 +34,12 @@
 {% block scripts %}
 <script>
 const s = {{ s | tojson }};
-new Chart('cDur',{type:'bar',data:{labels:s.dur_labels||[],datasets:[{label:'Films',data:s.dur_counts||[],backgroundColor:RP,borderRadius:5,borderWidth:0}]},options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(255,255,255,.04)'}}}}});
-new Chart('cSeas',{type:'bar',data:{labels:s.seas_labels||[],datasets:[{label:'Séries',data:s.seas_counts||[],backgroundColor:PP,borderRadius:5,borderWidth:0}]},options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(255,255,255,.04)'}}}}});
-new Chart('cRatComp',{type:'bar',data:{labels:s.ratcomp_labels||[],datasets:[{label:'Films',data:s.ratcomp_movies||[],backgroundColor:'rgba(229,9,20,.75)',borderRadius:3,borderWidth:0},{label:'Séries',data:s.ratcomp_shows||[],backgroundColor:'rgba(124,58,237,.75)',borderRadius:3,borderWidth:0}]},options:{scales:{x:{stacked:false,grid:{display:false},ticks:{font:{size:10}}},y:{grid:{color:'rgba(255,255,255,.04)'}}}}});
-new Chart('cYearComp',{type:'line',data:{labels:s.myear_labels||[],datasets:[{label:'Films',data:s.myear_counts||[],borderColor:'#E50914',backgroundColor:'rgba(229,9,20,.06)',fill:true,tension:.4,borderWidth:2,pointRadius:2},{label:'Séries',data:s.syear_counts||[],borderColor:'#7c3aed',backgroundColor:'rgba(124,58,237,.06)',fill:true,tension:.4,borderWidth:2,pointRadius:2}]},options:{scales:{x:{grid:{display:false},ticks:{font:{size:10},maxTicksLimit:8}},y:{grid:{color:'rgba(255,255,255,.04)'}}}}});
+new Chart('cDur',{type:'bar',data:{labels:s.dur_labels,datasets:[{label:'Films',data:s.dur_counts,backgroundColor:RP,borderRadius:5,borderWidth:0}]},options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(255,255,255,.04)'}}}}});
+new Chart('cSeas',{type:'bar',data:{labels:s.seas_labels,datasets:[{label:'Séries',data:s.seas_counts,backgroundColor:PP,borderRadius:5,borderWidth:0}]},options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(255,255,255,.04)'}}}}});
+new Chart('cRatComp',{type:'bar',data:{labels:s.ratcomp_labels,datasets:[{label:'Films',data:s.ratcomp_movies,backgroundColor:'rgba(229,9,20,.75)',borderRadius:3,borderWidth:0},{label:'Séries',data:s.ratcomp_shows,backgroundColor:'rgba(124,58,237,.75)',borderRadius:3,borderWidth:0}]},options:{scales:{x:{stacked:false,grid:{display:false},ticks:{font:{size:10}}},y:{grid:{color:'rgba(255,255,255,.04)'}}}}});
+new Chart('cYearComp',{type:'line',data:{labels:s.myear_labels,datasets:[{label:'Films',data:s.myear_counts,borderColor:'#E50914',backgroundColor:'rgba(229,9,20,.06)',fill:true,tension:.4,borderWidth:2,pointRadius:2},{label:'Séries',data:s.syear_counts||[],borderColor:'#7c3aed',backgroundColor:'rgba(124,58,237,.06)',fill:true,tension:.4,borderWidth:2,pointRadius:2}]},options:{scales:{x:{grid:{display:false},ticks:{font:{size:10},maxTicksLimit:8}},y:{grid:{color:'rgba(255,255,255,.04)'}}}}});
+
+function PP_def(){return ['#7c3aed','#8b5cf6','#a78bfa','#c4b5fd','#ddd6fe']}
+const PP=['#7c3aed','#8b5cf6','#a78bfa','#c4b5fd','#ddd6fe'];
 </script>
 {% endblock %}
