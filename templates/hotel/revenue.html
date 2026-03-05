@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block title %}Revenus & ADR — Hôtel{% endblock %}
+{% block breadcrumb %}<span style="color:#0891B2"><i class="fa-solid fa-hotel" style="margin-right:4px"></i>Hôtel</span> / Revenus & ADR{% endblock %}
+{% block content %}
+{% if session.role == 'viewer' %}
+<div class="card" style="padding:40px;text-align:center"><i class="fa-solid fa-lock" style="font-size:36px;color:#334155;margin-bottom:12px"></i><div style="font-size:14px;color:#475569">Module réservé aux Analystes, Managers et Admins.</div></div>
+{% else %}
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px">
+  {% for val, label, color, dec, suf in [(s.total_rev,'Revenu Total (k€)','#059669',0,'k€'),(s.avg_adr,'ADR Moyen','#d97706',1,'€'),(s.resort_adr,'ADR Resort','#0891B2',1,'€'),(s.city_adr,'ADR City Hotel','#7c3aed',1,'€')] %}
+  <div class="kpi" style="border-top:2px solid {{ color }}">
+    {% if label == 'Revenu Total (k€)' %}<div class="stat-num" data-count="{{ (val/1000)|round(1) }}" data-dec="1" data-suffix="k€" style="font-size:24px;color:#fff;margin-bottom:4px">0</div>{% else %}<div class="stat-num" data-count="{{ val }}" {% if dec>0 %}data-dec="{{ dec }}"{% endif %} data-suffix="{{ suf }}" style="font-size:24px;color:#fff;margin-bottom:4px">0</div>{% endif %}
+    <div style="font-size:10px;color:#334155;font-weight:700;text-transform:uppercase">{{ label }}</div>
+  </div>
+  {% endfor %}
+</div>
+<div style="display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:12px">
+  <div class="card" style="padding:16px"><div class="ct"><i class="fa-solid fa-chart-line" style="color:#059669"></i>Revenu mensuel total (€)</div><canvas id="cRevM" height="200"></canvas></div>
+  <div class="card" style="padding:16px"><div class="ct"><i class="fa-solid fa-hotel" style="color:#0891B2"></i>ADR moyen par hôtel</div><canvas id="cADRH" height="200"></canvas></div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+  <div class="card" style="padding:16px"><div class="ct"><i class="fa-solid fa-tags" style="color:#7c3aed"></i>ADR par segment de marché</div><canvas id="cADRms" height="200"></canvas></div>
+  <div class="card" style="padding:16px"><div class="ct"><i class="fa-solid fa-users" style="color:#d97706"></i>ADR par type de client</div><canvas id="cADRct" height="200"></canvas></div>
+</div>
+<!-- BoxPlot simplifié -->
+<div class="card" style="padding:16px">
+  <div class="ct"><i class="fa-solid fa-chart-simple" style="color:#E50914"></i>Distribution ADR — Statistiques comparatives Resort vs City</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:12px">
+    {% for hk, hlabel, color in [('resort_hotel','Resort Hotel','#0891B2'),('city_hotel','City Hotel','#7c3aed')] %}
+    {% if s.box and hk in s.box %}
+    {% set b = s.box[hk] %}
+    <div>
+      <div style="font-size:12px;font-weight:700;color:{{ color }};margin-bottom:10px">{{ hlabel }}</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+        {% for k, label, fc in [('min','Min','#475569'),('q1','Q1 (25%)','#64748b'),('med','Médiane','#e2e8f0'),('mean','Moyenne','#d97706'),('q3','Q3 (75%)','#64748b'),('max','Max','#ef4444')] %}
+        <div style="padding:8px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid {{ color }}20;text-align:center">
+          <div style="font-size:14px;font-weight:800;color:{{ fc }}">{{ b[k] }}€</div>
+          <div style="font-size:9.5px;color:#334155;margin-top:2px">{{ label }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+{% block scripts %}
+<script>
+const s = {{ s | tojson }};
+new Chart('cRevM',{type:'bar',data:{labels:s.revm_labels,datasets:[{label:'Revenu €',data:s.revm_values,backgroundColor:'rgba(5,150,105,.75)',borderRadius:4,borderWidth:0}]},options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:10},maxRotation:45}},y:{grid:{color:'rgba(255,255,255,.04)'}}}}});
+new Chart('cADRH',{type:'bar',data:{labels:s.adrh_labels,datasets:[{label:'ADR €',data:s.adrh_values,backgroundColor:['#0891B2','#7c3aed'],borderRadius:6,borderWidth:0}]},options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(255,255,255,.04)'}}}}});
+new Chart('cADRms',{type:'bar',data:{labels:s.adrms_labels,datasets:[{label:'ADR €',data:s.adrms_values,backgroundColor:BP,borderRadius:4,borderWidth:0}]},options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'}},y:{grid:{display:false},ticks:{font:{size:10}}}}}});
+new Chart('cADRct',{type:'bar',data:{labels:s.adrct_labels,datasets:[{label:'ADR €',data:s.adrct_values,backgroundColor:P,borderRadius:4,borderWidth:0}]},options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'}},y:{grid:{display:false},ticks:{font:{size:10}}}}}});
+</script>
+{% endblock %}

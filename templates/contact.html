@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}Contact — StayFlix{% endblock %}
+{% block breadcrumb %}Contact{% endblock %}
+{% block content %}
+<div style="max-width:560px">
+  <h2 style="font-size:18px;font-weight:800;color:#fff;margin-bottom:18px"><i class="fa-solid fa-envelope" style="color:#0891B2;margin-right:8px"></i>Contact</h2>
+  <div class="card" style="padding:24px">
+    <form method="POST">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div><label style="font-size:10px;font-weight:700;color:#334155;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px">Nom</label><input name="name" class="inp" style="width:100%" value="{{ session.first_name }} {{ session.last_name }}"></div>
+        <div><label style="font-size:10px;font-weight:700;color:#334155;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px">Email</label><input name="email" type="email" class="inp" style="width:100%"></div>
+      </div>
+      <div style="margin-bottom:12px"><label style="font-size:10px;font-weight:700;color:#334155;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px">Sujet</label><input name="subject" class="inp" style="width:100%"></div>
+      <div style="margin-bottom:18px"><label style="font-size:10px;font-weight:700;color:#334155;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px">Message</label><textarea name="message" class="inp" rows="5" style="width:100%;resize:vertical"></textarea></div>
+      <button type="submit" class="btn btn-blue"><i class="fa-solid fa-paper-plane"></i>Envoyer le message</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

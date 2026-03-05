@@ -1,0 +1,310 @@
+{% extends 'base.html' %}
+{% block title %}Netflix Dashboard — StayFlix{% endblock %}
+{% block breadcrumb %}
+  <span style="color:#6b7280">Analyse des données Netflix</span>
+  <span style="color:#374151;margin:0 6px">/</span>
+  <span style="color:#fca5a5;font-weight:600"><span class="netflix-n">N</span> &nbsp;Dashboard &nbsp;·&nbsp; Période 2008 – 2020</span>
+{% endblock %}
+{% block content %}
+
+<!-- ── FILTER BAR ──────────────────────────────── -->
+<div class="fbar">
+  <i class="fa-solid fa-sliders" style="color:#E50914;font-size:14px;flex-shrink:0"></i>
+  <span style="font-size:12px;font-weight:700;color:var(--txt4);text-transform:uppercase;letter-spacing:.06em">Filtres</span>
+  <select id="fType" class="inp" style="min-width:140px" onchange="refresh()">
+    <option value="">🎬 Tous types</option>
+    <option value="Movie">🎥 Films</option>
+    <option value="TV Show">📺 Séries TV</option>
+  </select>
+  <select id="fRating" class="inp" style="min-width:130px" onchange="refresh()">
+    <option value="">⭐ Tous ratings</option>
+    {% for r in s.all_ratings %}<option value="{{ r }}">{{ r }}</option>{% endfor %}
+  </select>
+  <select id="fYearAdded" class="inp" style="min-width:160px" onchange="refresh()">
+    <option value="">📅 Toutes années d'ajout</option>
+    {% for y in range(2008,2021) %}<option value="{{ y }}">Ajouté en {{ y }}</option>{% endfor %}
+  </select>
+  <select id="fYearFrom" class="inp" style="min-width:140px" onchange="refresh()">
+    <option value="">📆 Sortie depuis...</option>
+    {% for y in range(1990,2021) %}<option value="{{ y }}">≥ {{ y }}</option>{% endfor %}
+  </select>
+  <select id="fYearTo" class="inp" style="min-width:140px" onchange="refresh()">
+    <option value="">📆 ...jusqu'à</option>
+    {% for y in range(2020,1989,-1) %}<option value="{{ y }}">≤ {{ y }}</option>{% endfor %}
+  </select>
+  <button onclick="resetFilters()" class="btn btn-ghost" style="font-size:12.5px"><i class="fa-solid fa-rotate-left"></i>Reset</button>
+  <div id="fInfo" style="margin-left:auto;font-size:12.5px;font-weight:600;padding:5px 12px;border-radius:8px;background:rgba(229,9,20,.09);border:1px solid rgba(229,9,20,.18);color:#fca5a5;display:none"><i class="fa-solid fa-filter" style="font-size:10px;margin-right:4px"></i><span id="fInfoTxt"></span></div>
+</div>
+
+<!-- ── ADAPTIVE COMMENT ─────────────────────────── -->
+<div id="adaptComment" style="display:none;padding:12px 18px;border-radius:11px;background:rgba(229,9,20,.07);border:1px solid rgba(229,9,20,.18);margin-bottom:16px;font-size:13.5px;color:var(--txt3);line-height:1.6">
+  <i class="fa-solid fa-robot" style="color:#E50914;margin-right:8px"></i><span id="adaptCommentText"></span>
+</div>
+
+<!-- ── KPIs ROW ────────────────────────────────── -->
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px">
+  <div class="kpi fu d1" style="border-top:3px solid #E50914">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div style="width:36px;height:36px;border-radius:10px;background:rgba(229,9,20,.12);display:flex;align-items:center;justify-content:center"><i class="fa-solid fa-circle-play" style="color:#E50914;font-size:15px"></i></div>
+      <div style="width:8px;height:8px;border-radius:50%;background:#E50914;position:relative"><div style="position:absolute;inset:-4px;border-radius:50%;border:2px solid #E50914;animation:pulse-ring 1.8s ease-out infinite"></div></div>
+    </div>
+    <div class="kpi-val" id="kTotal" data-count="{{ s.total }}" style="font-size:32px">0</div>
+    <div class="kpi-label">Titres au catalogue</div>
+    <div class="prog" style="margin-top:8px"><div class="prog-fill" style="background:#E50914;width:100%"></div></div>
+  </div>
+  <div class="kpi fu d2" style="border-top:3px solid #7c3aed">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div style="width:36px;height:36px;border-radius:10px;background:rgba(124,58,237,.12);display:flex;align-items:center;justify-content:center"><i class="fa-solid fa-film" style="color:#a78bfa;font-size:15px"></i></div>
+      <span style="font-size:12px;font-weight:700;padding:3px 9px;border-radius:8px;background:rgba(124,58,237,.12);color:#a78bfa">{{ (s.movies / [s.total,1]|max * 100)|round(1) }}%</span>
+    </div>
+    <div class="kpi-val" id="kMovies" data-count="{{ s.movies }}" style="font-size:32px">0</div>
+    <div class="kpi-label">Films</div>
+    <div class="prog" style="margin-top:8px"><div class="prog-fill" style="background:#7c3aed;width:{{ (s.movies / [s.total,1]|max * 100)|round(0) }}%"></div></div>
+  </div>
+  <div class="kpi fu d3" style="border-top:3px solid #0284c7">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div style="width:36px;height:36px;border-radius:10px;background:rgba(2,132,199,.12);display:flex;align-items:center;justify-content:center"><i class="fa-solid fa-tv" style="color:#7dd3fc;font-size:15px"></i></div>
+      <span style="font-size:12px;font-weight:700;padding:3px 9px;border-radius:8px;background:rgba(2,132,199,.12);color:#7dd3fc">{{ (s.shows / [s.total,1]|max * 100)|round(1) }}%</span>
+    </div>
+    <div class="kpi-val" id="kShows" data-count="{{ s.shows }}" style="font-size:32px">0</div>
+    <div class="kpi-label">Séries TV</div>
+    <div class="prog" style="margin-top:8px"><div class="prog-fill" style="background:#0284c7;width:{{ (s.shows / [s.total,1]|max * 100)|round(0) }}%"></div></div>
+  </div>
+  <div class="kpi fu d4" style="border-top:3px solid #d97706">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div style="width:36px;height:36px;border-radius:10px;background:rgba(217,119,6,.12);display:flex;align-items:center;justify-content:center"><i class="fa-solid fa-clock" style="color:#fcd34d;font-size:15px"></i></div>
+      <span style="font-size:12px;font-weight:700;padding:3px 9px;border-radius:8px;background:rgba(217,119,6,.12);color:#fcd34d">Films</span>
+    </div>
+    <div class="kpi-val" style="font-size:32px"><span id="kDur" data-count="{{ s.avg_duration }}" data-dec="1">0</span><span style="font-size:16px;color:var(--txt4);font-weight:400"> min</span></div>
+    <div class="kpi-label">Durée moy. par film</div>
+    <div class="prog" style="margin-top:8px"><div class="prog-fill" style="background:#d97706;width:{{ [s.avg_duration / 3, 100]|min|round(0) }}%"></div></div>
+  </div>
+</div>
+
+<!-- ── MAIN CHART GRID ROW 1 ───────────────────── -->
+<div style="display:grid;grid-template-columns:1fr 1fr 1.5fr;gap:14px;margin-bottom:14px">
+  <!-- Donut: Films vs Séries -->
+  <div class="card fu d1">
+    <div style="padding:18px 18px 4px">
+      <div class="ct"><i class="fa-solid fa-chart-pie" style="color:#E50914"></i>Films vs Séries TV</div>
+    </div>
+    <div style="padding:4px 18px 16px">
+      <canvas id="cType" height="200"></canvas>
+    </div>
+  </div>
+  <!-- Bar: Ratings -->
+  <div class="card fu d2">
+    <div style="padding:18px 18px 4px">
+      <div class="ct"><i class="fa-solid fa-star" style="color:#eab308"></i>Top Ratings du catalogue</div>
+    </div>
+    <div style="padding:4px 18px 16px">
+      <canvas id="cRat" height="200"></canvas>
+    </div>
+  </div>
+  <!-- Stacked Bar: Ajouts annuels -->
+  <div class="card fu d3">
+    <div style="padding:18px 18px 4px">
+      <div class="ct"><i class="fa-solid fa-calendar-days" style="color:#7c3aed"></i>Ajouts annuels Netflix (Films + Séries)</div>
+    </div>
+    <div style="padding:4px 18px 16px">
+      <canvas id="cYA" height="200"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- ── MAIN CHART GRID ROW 2 ───────────────────── -->
+<div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:14px">
+  <!-- Line: Release years -->
+  <div class="card fu d1">
+    <div style="padding:18px 18px 4px">
+      <div class="ct"><i class="fa-solid fa-chart-line" style="color:#0284c7"></i>Distribution des sorties (depuis 1990)</div>
+    </div>
+    <div style="padding:4px 18px 16px">
+      <canvas id="cRY" height="150"></canvas>
+    </div>
+  </div>
+  <!-- Bar: Duration distribution -->
+  <div class="card fu d2">
+    <div style="padding:18px 18px 4px">
+      <div class="ct"><i class="fa-solid fa-bars-staggered" style="color:#d97706"></i>Durées films (tranches)</div>
+    </div>
+    <div style="padding:4px 18px 16px">
+      <canvas id="cDur" height="150"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- ── TOP 10 FILMS + SÉRIES ────────────────────── -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+  <div class="card fu d1">
+    <div style="padding:18px 18px 4px">
+      <div class="ct"><i class="fa-solid fa-trophy" style="color:#E50914"></i>Top 10 Films — Plus longue durée <span style="font-size:11px;font-weight:400;color:var(--txt4);margin-left:4px">(proxy popularité)</span></div>
+    </div>
+    <div style="padding:4px 18px 16px">
+      <canvas id="cTop10F" height="250"></canvas>
+    </div>
+  </div>
+  <div class="card fu d2">
+    <div style="padding:18px 18px 4px">
+      <div class="ct"><i class="fa-solid fa-award" style="color:#0284c7"></i>Top 10 Séries — Plus de saisons <span style="font-size:11px;font-weight:400;color:var(--txt4);margin-left:4px">(proxy longévité)</span></div>
+    </div>
+    <div style="padding:4px 18px 16px">
+      <canvas id="cTop10S" height="250"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- ── INSIGHTS ROW ────────────────────────────── -->
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px">
+  <div class="insight-card fu d1" style="border-color:#E50914">
+    <div class="insight-label" style="color:#E50914"><i class="fa-solid fa-lightbulb"></i>Insight Catalogue</div>
+    <p class="insight-text">Netflix a multiplié ses ajouts par <strong>{{ ((s.ya_movies[-1]|default(0) + s.ya_shows[-1]|default(0)) / [s.ya_movies[0]|default(1) + s.ya_shows[0]|default(1), 1]|max)|round(1) }}x</strong> entre <strong>2008</strong> et <strong>2020</strong>. Les films représentent <strong>{{ (s.movies / [s.total,1]|max * 100)|round(1) }}%</strong> du catalogue total avec une durée moyenne de <strong>{{ s.avg_duration }} min</strong>.</p>
+  </div>
+  <div class="insight-card fu d2" style="border-color:#7c3aed">
+    <div class="insight-label" style="color:#a78bfa"><i class="fa-solid fa-users"></i>Insight Audience</div>
+    <p class="insight-text">Le rating <strong>TV-MA</strong> domine le catalogue — stratégie délibérée de ciblage des adultes. Les ratings <strong>TV-14</strong> et <strong>TV-PG</strong> couvrent les tranches 14+ et 8+, signe d'une offre diversifiée. <strong>{{ s.ratings_count }}</strong> ratings distincts identifiés.</p>
+  </div>
+  <div class="insight-card fu d3" style="border-color:#0284c7">
+    <div class="insight-label" style="color:#7dd3fc"><i class="fa-solid fa-rocket"></i>Tendance Stratégique</div>
+    <p class="insight-text">Pic d'ajouts en <strong>2019</strong>. Les sorties cinéma récentes (2015-2020) sont majoritairement intégrées dans l'année suivant leur sortie. Les séries ont connu une croissance <strong>+420%</strong> entre 2015 et 2019.</p>
+  </div>
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script>
+const S = {{ s | tojson }};
+let charts = {};
+
+function buildCharts(d) {
+  // Type donut
+  if(charts.type) charts.type.destroy();
+  charts.type = new Chart('cType', {
+    type:'doughnut',
+    data:{labels:d.type_labels||['Films','Séries'],datasets:[{data:d.type_counts||[d.movies,d.shows],backgroundColor:['#E50914','#7c3aed'],borderWidth:0,hoverOffset:6}]},
+    options:{plugins:{legend:{position:'bottom',labels:{font:{size:13,weight:'600'}}}},cutout:'65%',animation:{animateScale:true,duration:1100}}
+  });
+
+  // Ratings bar
+  if(charts.rat) charts.rat.destroy();
+  charts.rat = new Chart('cRat', {
+    type:'bar',
+    data:{labels:d.rat_labels||[],datasets:[{data:d.rat_counts||[],backgroundColor:RP,borderRadius:6,borderWidth:0}]},
+    options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{font:{size:12}}},y:{grid:{display:false},ticks:{font:{size:12,weight:'600'}}}}}
+  });
+
+  // Yearly stacked
+  if(charts.ya) charts.ya.destroy();
+  charts.ya = new Chart('cYA', {
+    type:'bar',
+    data:{labels:d.ya_years||[],datasets:[
+      {label:'Films',data:d.ya_movies||[],backgroundColor:'rgba(229,9,20,.8)',borderRadius:3,borderWidth:0,stack:'s'},
+      {label:'Séries TV',data:d.ya_shows||[],backgroundColor:'rgba(124,58,237,.8)',borderRadius:3,borderWidth:0,stack:'s'}
+    ]},
+    options:{plugins:{legend:{position:'top'}},scales:{x:{stacked:true,grid:{display:false},ticks:{font:{size:12}}},y:{stacked:true,grid:{color:'rgba(255,255,255,.05)'},ticks:{font:{size:12}}}}}
+  });
+
+  // Release years line
+  if(charts.ry) charts.ry.destroy();
+  charts.ry = new Chart('cRY', {
+    type:'line',
+    data:{labels:d.ry_years||[],datasets:[{label:'Sorties',data:d.ry_counts||[],borderColor:'#0284c7',backgroundColor:'rgba(2,132,199,.08)',fill:true,tension:.4,pointRadius:2,borderWidth:2.5}]},
+    options:{plugins:{legend:{display:false}},scales:{y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{font:{size:12}}},x:{grid:{display:false},ticks:{font:{size:11},maxTicksLimit:10}}}}
+  });
+
+  // Duration distribution
+  if(charts.dur) charts.dur.destroy();
+  charts.dur = new Chart('cDur', {
+    type:'bar',
+    data:{labels:d.dur_labels||[],datasets:[{data:d.dur_counts||[],backgroundColor:P,borderRadius:5,borderWidth:0}]},
+    options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:11,weight:'600'}}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{font:{size:12}}}}}
+  });
+
+  // Top 10 Films
+  if(charts.top10f) charts.top10f.destroy();
+  const tf = d.top10_films || {};
+  charts.top10f = new Chart('cTop10F', {
+    type:'bar',
+    data:{
+      labels: (tf.labels||[]).map(l=>l.length>30?l.slice(0,28)+'…':l),
+      datasets:[{
+        label:'Durée (min)',
+        data:tf.values||[],
+        backgroundColor:RP.map((c,i)=>c+(i===0?'':'cc')),
+        borderRadius:5,borderWidth:0
+      }]
+    },
+    options:{
+      indexAxis:'y',
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>`${ctx.raw} min — ${(tf.years||[])[ctx.dataIndex]||'?'}`}}},
+      scales:{x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{font:{size:12}}},y:{grid:{display:false},ticks:{font:{size:12,weight:'600'}}}}
+    }
+  });
+
+  // Top 10 Shows
+  if(charts.top10s) charts.top10s.destroy();
+  const ts = d.top10_shows || {};
+  charts.top10s = new Chart('cTop10S', {
+    type:'bar',
+    data:{
+      labels: (ts.labels||[]).map(l=>l.length>30?l.slice(0,28)+'…':l),
+      datasets:[{
+        label:'Saisons',
+        data:ts.values||[],
+        backgroundColor:BP.map((c,i)=>c+(i===0?'':'cc')),
+        borderRadius:5,borderWidth:0
+      }]
+    },
+    options:{
+      indexAxis:'y',
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>`${ctx.raw} saison${ctx.raw>1?'s':''} — ${(ts.years||[])[ctx.dataIndex]||'?'}`}}},
+      scales:{x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{font:{size:12}}},y:{grid:{display:false},ticks:{font:{size:12,weight:'600'}}}}
+    }
+  });
+
+  // Update KPI counters
+  const upd = {kTotal:[d.total,0,''],kMovies:[d.movies,0,''],kShows:[d.shows,0,''],kDur:[d.avg_duration,1,' min']};
+  Object.entries(upd).forEach(([id,[val,dec,suf]])=>{const el=document.getElementById(id);if(el){el._counted=0;animCount(el,val,1200,'',suf.trim()?'':suf,dec);}});
+}
+
+function refresh() {
+  const params = new URLSearchParams();
+  const mp = {fType:'type',fRating:'rating',fYearAdded:'year_added',fYearFrom:'year_from',fYearTo:'year_to'};
+  let hasFilter = false;
+  Object.entries(mp).forEach(([id,k])=>{const v=document.getElementById(id)?.value;if(v){params.append(k,v);hasFilter=true;}});
+  if(!hasFilter){resetFilters();return;}
+  document.getElementById('fInfo').style.display='flex';
+  fetch('/api/netflix/stats?'+params).then(r=>r.json()).then(d=>{
+    buildCharts(d);
+    document.getElementById('fInfoTxt').textContent = `${d.total.toLocaleString('fr-FR')} titres filtrés`;
+    updateComment(d, params);
+  });
+}
+
+function updateComment(d, params) {
+  const el = document.getElementById('adaptComment');
+  const txt = document.getElementById('adaptCommentText');
+  const type = params.get('type');
+  const rating = params.get('rating');
+  let msg = '';
+  if(type==='Movie') msg = `📽️ Sélection Films uniquement : <strong>${d.total.toLocaleString('fr-FR')}</strong> films pour une durée moyenne de <strong>${d.avg_duration} min</strong>. ${d.movies > 2000 ? 'Le catalogue Films reste très large.' : 'Sélection ciblée sur ce sous-ensemble.'}`;
+  else if(type==='TV Show') msg = `📺 Sélection Séries uniquement : <strong>${d.total.toLocaleString('fr-FR')}</strong> séries avec en moyenne <strong>${d.avg_seasons} saison(s)</strong>. ${d.shows > 1000 ? 'Fort catalogue de séries.' : 'Sélection de niche.'}`;
+  else if(rating) msg = `🎭 Filtrage sur le rating <strong>${rating}</strong> : <strong>${d.total.toLocaleString('fr-FR')}</strong> titres. ${d.total > 500 ? 'Ce rating est très représenté.' : d.total < 100 ? 'Rating de niche (<100 titres).' : 'Représentation modérée.'}`;
+  else msg = `🔍 Filtre actif — <strong>${d.total.toLocaleString('fr-FR')}</strong> titres correspondent à votre sélection sur <strong>${S.total.toLocaleString('fr-FR')}</strong> au total (${(d.total/S.total*100).toFixed(1)}% du catalogue).`;
+  txt.innerHTML = msg;
+  el.style.display = 'block';
+}
+
+function resetFilters() {
+  ['fType','fRating','fYearAdded','fYearFrom','fYearTo'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('fInfo').style.display='none';
+  document.getElementById('adaptComment').style.display='none';
+  buildCharts(S);
+}
+
+// Build initial
+buildCharts(S);
+</script>
+{% endblock %}

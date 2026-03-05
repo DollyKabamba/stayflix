@@ -1,0 +1,61 @@
+{% extends 'base_public.html' %}
+{% block title %}Connexion — StayFlix{% endblock %}
+{% block content %}
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;position:relative;overflow:hidden">
+  <!-- Background blobs -->
+  <div style="position:absolute;top:-100px;right:-100px;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(229,9,20,.07),transparent 70%);pointer-events:none"></div>
+  <div style="position:absolute;bottom:-100px;left:-100px;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(8,145,178,.06),transparent 70%);pointer-events:none"></div>
+  <div style="position:absolute;top:50%;left:50%;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(124,58,237,.04),transparent 70%);transform:translate(-50%,-50%);pointer-events:none"></div>
+
+  <div style="width:100%;max-width:400px;animation:fadeUp .5s ease">
+    <!-- Logo -->
+    <div style="text-align:center;margin-bottom:28px">
+      <div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#E50914,#7c3aed,#0891B2);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;animation:float 4s ease-in-out infinite">
+        <i class="fa-solid fa-play" style="color:#fff;font-size:18px;margin-left:3px"></i>
+      </div>
+      <div style="font-size:24px;font-weight:900;color:#f1f5f9;letter-spacing:-.03em">StayFlix</div>
+      <div style="font-size:11px;color:#334155;font-weight:600;letter-spacing:.1em;text-transform:uppercase;margin-top:3px">Analytics Pro · ENSEA 2025‑2026</div>
+    </div>
+
+    <div class="card" style="padding:26px">
+      {% if error %}<div class="alert alert-danger"><i class="fa-solid fa-circle-exclamation"></i>{{ error }}</div>{% endif %}
+      <div style="font-size:16px;font-weight:700;color:#e2e8f0;margin-bottom:4px">Bienvenue 👋</div>
+      <div style="font-size:12px;color:#475569;margin-bottom:20px">Connectez-vous pour explorer vos données</div>
+      <form method="POST">
+        <div style="margin-bottom:12px">
+          <label style="font-size:11px;font-weight:600;color:#475569;display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em">Identifiant</label>
+          <input name="username" class="inp" placeholder="Votre identifiant" required autocomplete="username">
+        </div>
+        <div style="margin-bottom:18px">
+          <label style="font-size:11px;font-weight:600;color:#475569;display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em">Mot de passe</label>
+          <input name="password" type="password" class="inp" placeholder="••••••••" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn btn-red" style="width:100%;padding:10px"><i class="fa-solid fa-arrow-right-to-bracket"></i>Se connecter</button>
+      </form>
+
+      <!-- Quick access demo -->
+      <div style="margin-top:20px;padding-top:18px;border-top:1px solid rgba(255,255,255,.06)">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#1e293b;text-align:center;margin-bottom:10px">Accès rapide démo</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+          {% for role, color, icon, label in [
+            ('admin','#ef4444','fa-shield-halved','Admin'),
+            ('manager','#f59e0b','fa-briefcase','Manager'),
+            ('analyst','#60a5fa','fa-chart-bar','Analyste'),
+            ('viewer','#94a3b8','fa-eye','Viewer')
+          ] %}
+          <form method="POST" style="margin:0">
+            <input type="hidden" name="quick_role" value="{{ role }}">
+            <button type="submit" style="width:100%;display:flex;align-items:center;gap:6px;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);color:#64748b;font-size:11.5px;font-weight:600;cursor:pointer;transition:.16s;font-family:inherit" onmouseover="this.style.borderColor='{{ color }}40';this.style.color='{{ color }}'" onmouseout="this.style.borderColor='rgba(255,255,255,.07)';this.style.color='#64748b'">
+              <i class="fa-solid {{ icon }}" style="color:{{ color }};font-size:10px"></i>{{ label }}
+            </button>
+          </form>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:14px">
+      <a href="{{ url_for('register') }}" style="font-size:12px;color:#334155;text-decoration:none">Pas de compte ? <span style="color:#E50914;font-weight:600">S'inscrire</span></a>
+    </div>
+  </div>
+</div>
+{% endblock %}

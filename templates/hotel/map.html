@@ -1,0 +1,245 @@
+{% extends 'base.html' %}
+{% block title %}Carte Mondiale — Hôtel{% endblock %}
+{% block breadcrumb %}<span style="color:#0284c7;font-weight:600"><i class="fa-solid fa-earth-europe" style="margin-right:5px"></i>Carte Mondiale des Clients</span>{% endblock %}
+{% block content %}
+
+<!-- Header + Quick stats -->
+<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px;gap:12px;flex-wrap:wrap">
+  <div>
+    <h2 style="font-size:20px;font-weight:800;color:#f9fafb;margin-bottom:4px">🗺️ Répartition mondiale des clients</h2>
+    <p style="font-size:13.5px;color:#9ca3af">
+      <strong style="color:#7dd3fc" data-count="{{ s.countries }}">0</strong> pays représentés ·
+      <strong style="color:#7dd3fc" data-count="{{ s.total }}">0</strong> réservations totales ·
+      <strong style="color:#fcd34d" data-count="{{ s.avg_adr }}" data-dec="1">0</strong>€ ADR moyen
+    </p>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <!-- Basemap switcher -->
+    <div style="background:#1f2937;border:1px solid rgba(255,255,255,.09);border-radius:10px;padding:4px;display:flex;gap:3px" id="basemapSwitcher">
+      <button onclick="setBasemap('light')" id="bm-light" class="btn btn-red" style="font-size:11.5px;padding:5px 11px"><i class="fa-solid fa-sun"></i>Clair</button>
+      <button onclick="setBasemap('topo')" id="bm-topo" class="btn btn-ghost" style="font-size:11.5px;padding:5px 11px"><i class="fa-solid fa-mountain"></i>Topo</button>
+      <button onclick="setBasemap('dark')" id="bm-dark" class="btn btn-ghost" style="font-size:11.5px;padding:5px 11px"><i class="fa-solid fa-moon"></i>Sombre</button>
+      <button onclick="setBasemap('satellite')" id="bm-satellite" class="btn btn-ghost" style="font-size:11.5px;padding:5px 11px"><i class="fa-solid fa-satellite"></i>Satellite</button>
+    </div>
+  </div>
+</div>
+
+<!-- Filter Bar -->
+<div class="fbar">
+  <i class="fa-solid fa-filter" style="color:#0284c7;font-size:13px;flex-shrink:0"></i>
+  <select id="fHotel" class="inp" style="min-width:160px" onchange="applyFilters()"><option value="">🏨 Tous les hôtels</option><option value="Resort Hotel">🌴 Resort Hotel</option><option value="City Hotel">🏙️ City Hotel</option></select>
+  <select id="fMonth" class="inp" style="min-width:140px" onchange="applyFilters()"><option value="">📅 Tous les mois</option>{% for m in months %}<option value="{{ m }}">{{ m }}</option>{% endfor %}</select>
+  <select id="fSeg" class="inp" style="min-width:160px" onchange="applyFilters()"><option value="">🎯 Tous segments</option>{% for seg in segments %}<option value="{{ seg }}">{{ seg }}</option>{% endfor %}</select>
+  <select id="fCancel" class="inp" style="min-width:170px" onchange="applyFilters()"><option value="">✅ Toutes réservations</option><option value="0">✅ Confirmées uniquement</option><option value="1">❌ Annulées uniquement</option></select>
+  <button onclick="resetFilters()" class="btn btn-ghost"><i class="fa-solid fa-rotate-left"></i>Reset</button>
+  <div id="mapInfo" style="margin-left:auto;font-size:12.5px;font-weight:600;color:#9ca3af"></div>
+</div>
+
+<!-- Adaptive comment -->
+<div id="mapComment" style="display:none;padding:12px 18px;border-radius:11px;background:rgba(2,132,199,.07);border:1px solid rgba(2,132,199,.18);margin-bottom:14px;font-size:13.5px;color:#9ca3af">
+  <i class="fa-solid fa-circle-info" style="color:#7dd3fc;margin-right:8px"></i><span id="mapCommentText"></span>
+</div>
+
+<!-- Main Grid: Map + Ranking -->
+<div style="display:grid;grid-template-columns:1fr 290px;gap:14px;margin-bottom:16px">
+  <!-- MAP -->
+  <div class="card" style="overflow:hidden;position:relative">
+    <div id="map" style="height:480px;border-radius:13px"></div>
+    <!-- Legend -->
+    <div style="position:absolute;bottom:16px;left:16px;background:rgba(255,255,255,.96);border-radius:10px;padding:10px 14px;box-shadow:0 4px 16px rgba(0,0,0,.15)">
+      <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:#374151;margin-bottom:7px">Volume réservations</div>
+      <div id="legendHeat" style="font-size:11px;color:#6b7280;margin-bottom:6px">Mode: Bulles proportionnelles</div>
+      {% for size, color, label in [('20px','#1e3a8a','> 1 000'),('13px','#0284c7','200 – 1 000'),('8px','#38bdf8','< 200')] %}
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px">
+        <div style="width:{{ size }};height:{{ size }};border-radius:50%;background:{{ color }};opacity:.8;flex-shrink:0"></div>
+        <span style="font-size:11px;color:#4b5563;font-weight:500">{{ label }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    <!-- Color scale bar -->
+    <div style="position:absolute;top:16px;left:16px;background:rgba(255,255,255,.96);border-radius:9px;padding:8px 12px;box-shadow:0 2px 10px rgba(0,0,0,.1)">
+      <div style="font-size:10px;font-weight:700;color:#374151;margin-bottom:4px">Taux annulation</div>
+      <div style="display:flex;align-items:center;gap:5px">
+        <span style="font-size:10px;color:#374151">0%</span>
+        <div style="width:80px;height:8px;border-radius:4px;background:linear-gradient(90deg,#10b981,#fbbf24,#ef4444)"></div>
+        <span style="font-size:10px;color:#374151">100%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- COUNTRY LIST -->
+  <div class="card" style="overflow:hidden">
+    <div style="padding:14px 16px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:8px">
+      <i class="fa-solid fa-ranking-star" style="color:#d97706;font-size:14px"></i>
+      <span style="font-size:14px;font-weight:700;color:#f9fafb">Top Pays Clients</span>
+    </div>
+    <div id="countryList" style="overflow-y:auto;max-height:424px;scrollbar-width:thin;scrollbar-color:#1e293b transparent"></div>
+  </div>
+</div>
+
+<!-- Charts Row -->
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px">
+  <div class="card" style="padding:18px">
+    <div class="ct"><i class="fa-solid fa-chart-bar" style="color:#0284c7"></i>Top 10 Pays — Réservations</div>
+    <canvas id="cCntry" height="220"></canvas>
+  </div>
+  <div class="card" style="padding:18px">
+    <div class="ct"><i class="fa-solid fa-ban" style="color:#ef4444"></i>Top 10 Pays — Annulation (%)</div>
+    <canvas id="cCancelMap" height="220"></canvas>
+  </div>
+  <div class="card" style="padding:18px">
+    <div class="ct"><i class="fa-solid fa-coins" style="color:#d97706"></i>Top 10 Pays — ADR moyen (€)</div>
+    <canvas id="cADRMap" height="220"></canvas>
+  </div>
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script>
+// ── Basemap tiles ────────────────────────────────
+const TILES = {
+  light: {
+    url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+    attr: '© CartoDB',
+    name: 'Clair'
+  },
+  dark: {
+    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    attr: '© CartoDB',
+    name: 'Sombre'
+  },
+  topo: {
+    url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+    attr: '© OpenTopoMap',
+    name: 'Topo'
+  },
+  satellite: {
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    attr: '© ESRI',
+    name: 'Satellite'
+  }
+};
+
+let leafMap, tileLayer, currentBasemap='light', allData=[], charts={};
+
+// Init map
+leafMap = L.map('map', {center:[30,15], zoom:2, minZoom:1, maxZoom:8, zoomControl:false});
+L.control.zoom({position:'topright'}).addTo(leafMap);
+tileLayer = L.tileLayer(TILES.light.url, {attribution:TILES.light.attr, subdomains:'abcd', maxZoom:19}).addTo(leafMap);
+
+function setBasemap(key) {
+  leafMap.removeLayer(tileLayer);
+  const t = TILES[key];
+  tileLayer = L.tileLayer(t.url, {attribution:t.attr, subdomains:'abcd', maxZoom:19}).addTo(leafMap);
+  currentBasemap = key;
+  document.querySelectorAll('#basemapSwitcher .btn').forEach(b=>{
+    b.className = b.id === 'bm-'+key ? 'btn btn-red' : 'btn btn-ghost';
+    b.style.fontSize = '11.5px'; b.style.padding = '5px 11px';
+  });
+}
+
+// Radius helper
+function getRadius(n) { return n>5000?28:n>1000?20:n>500?14:n>200?10:n>50?7:5; }
+
+// Cancel → color
+function cancelColor(pct) {
+  if(pct<20) return '#10b981';
+  if(pct<35) return '#fbbf24';
+  if(pct<50) return '#f97316';
+  return '#ef4444';
+}
+
+function renderMap(data) {
+  leafMap.eachLayer(l=>{if(l instanceof L.CircleMarker)leafMap.removeLayer(l);});
+  data.forEach(d=>{
+    const c = L.circleMarker([d.lat,d.lon], {
+      radius: getRadius(d.count),
+      fillColor: cancelColor(d.cancel),
+      color: '#fff',
+      weight: 1.5,
+      opacity: .9,
+      fillOpacity: .72
+    });
+    c.bindPopup(`
+      <div style="font-family:'DM Sans',sans-serif;min-width:190px">
+        <div style="font-weight:800;font-size:14px;margin-bottom:10px;color:#1f2937;border-bottom:2px solid #E50914;padding-bottom:6px">${d.country}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;font-size:12px">
+          <div style="color:#6b7280">Réservations</div><div style="font-weight:700;color:#0284c7;text-align:right">${d.count.toLocaleString('fr-FR')}</div>
+          <div style="color:#6b7280">Annulations</div><div style="font-weight:700;color:${cancelColor(d.cancel)};text-align:right">${d.cancel}%</div>
+          <div style="color:#6b7280">ADR moyen</div><div style="font-weight:700;color:#d97706;text-align:right">${d.adr}€</div>
+          <div style="color:#6b7280">Revenu</div><div style="font-weight:700;color:#7c3aed;text-align:right">${Math.round(d.revenue/1000)}k€</div>
+        </div>
+      </div>`);
+    c.addTo(leafMap);
+  });
+}
+
+function renderCountryList(data) {
+  const max = data[0]?.count || 1;
+  document.getElementById('countryList').innerHTML = data.slice(0,25).map((d,i) => `
+    <div style="padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.04);display:flex;align-items:center;gap:8px;transition:.15s" onmouseover="this.style.background='rgba(255,255,255,.03)'" onmouseout="this.style.background='transparent'">
+      <span style="font-size:11px;font-weight:800;color:${i<3?'#d97706':'#6b7280'};width:20px;text-align:right;flex-shrink:0">${i+1}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;color:#f9fafb;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.country}</div>
+        <div style="height:4px;border-radius:2px;background:rgba(255,255,255,.07);margin-top:3px">
+          <div style="height:4px;border-radius:2px;background:#0284c7;width:${(d.count/max*100).toFixed(0)}%;transition:width .6s ease"></div>
+        </div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;min-width:65px">
+        <div style="font-size:13px;font-weight:700;color:#7dd3fc">${d.count.toLocaleString('fr-FR')}</div>
+        <div style="font-size:11px;font-weight:600;color:${cancelColor(d.cancel)}">${d.cancel}%↓</div>
+      </div>
+    </div>`).join('');
+}
+
+function renderCharts(data) {
+  const top = data.slice(0,10);
+  ['cntry','cancelMap','adrMap'].forEach(k=>{if(charts[k])charts[k].destroy()});
+  charts.cntry = new Chart('cCntry',{type:'bar',data:{labels:top.map(d=>d.country),datasets:[{label:'Réservations',data:top.map(d=>d.count),backgroundColor:BP,borderRadius:5,borderWidth:0}]},options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{font:{size:12}}},y:{grid:{display:false},ticks:{font:{size:12,weight:'600'}}}}}});
+  const cs=[...top].sort((a,b)=>b.cancel-a.cancel);
+  charts.cancelMap = new Chart('cCancelMap',{type:'bar',data:{labels:cs.map(d=>d.country),datasets:[{data:cs.map(d=>d.cancel),backgroundColor:cs.map(d=>cancelColor(d.cancel)),borderRadius:5,borderWidth:0}]},options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{font:{size:12}},max:100},y:{grid:{display:false},ticks:{font:{size:12,weight:'600'}}}}}});
+  const as=[...top].sort((a,b)=>b.adr-a.adr);
+  charts.adrMap = new Chart('cADRMap',{type:'bar',data:{labels:as.map(d=>d.country),datasets:[{data:as.map(d=>d.adr),backgroundColor:'rgba(217,119,6,.8)',borderRadius:5,borderWidth:0}]},options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{font:{size:12}}},y:{grid:{display:false},ticks:{font:{size:12,weight:'600'}}}}}});
+}
+
+function updateMapComment(data, params) {
+  const el = document.getElementById('mapComment');
+  const txt = document.getElementById('mapCommentText');
+  if(!params || params.toString()==='') { el.style.display='none'; return; }
+  const hotel = params.get('hotel'), month = params.get('month'), seg = params.get('segment'), cancel = params.get('canceled');
+  let msg = `📍 Filtre actif : <strong>${data.length}</strong> pays représentés`;
+  if(hotel) msg += ` · Hôtel : <strong>${hotel}</strong>`;
+  if(month) msg += ` · Mois : <strong>${month}</strong>`;
+  if(seg) msg += ` · Segment : <strong>${seg}</strong>`;
+  if(cancel==='0') msg += ` · <strong style="color:#6ee7b7">Confirmées uniquement</strong>`;
+  if(cancel==='1') msg += ` · <strong style="color:#fca5a5">Annulées uniquement</strong>`;
+  const topCountry = data[0];
+  if(topCountry) msg += `. Premier marché : <strong>${topCountry.country}</strong> (${topCountry.count.toLocaleString('fr-FR')} réserv., ${topCountry.cancel}% annulées, ADR ${topCountry.adr}€).`;
+  txt.innerHTML = msg;
+  el.style.display = 'block';
+}
+
+function applyFilters() {
+  const params = new URLSearchParams();
+  const mp={fHotel:'hotel',fMonth:'month',fSeg:'segment',fCancel:'canceled'};
+  Object.entries(mp).forEach(([id,k])=>{const v=document.getElementById(id)?.value;if(v)params.append(k,v);});
+  document.getElementById('mapInfo').textContent='⏳ Chargement...';
+  fetch('/api/hotel/map?'+params).then(r=>r.json()).then(data=>{
+    allData = data;
+    renderMap(data);
+    renderCountryList(data);
+    renderCharts(data);
+    document.getElementById('mapInfo').textContent = `${data.length} pays affichés`;
+    updateMapComment(data, params);
+  });
+}
+
+function resetFilters() {
+  ['fHotel','fMonth','fSeg','fCancel'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('mapComment').style.display='none';
+  applyFilters();
+}
+
+applyFilters();
+</script>
+{% endblock %}

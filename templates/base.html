@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{% block title %}StayFlix Analytics{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#E50914;--blue:#0284c7;--purple:#7c3aed;--green:#059669;--gold:#b45309;
+  --bg:#111827;--card:#1f2937;--card2:#263042;--bdr:rgba(255,255,255,.09);
+  --txt:#f9fafb;--txt2:#d1d5db;--txt3:#9ca3af;--txt4:#6b7280;
+}
+body{background:var(--bg);color:var(--txt);font-family:'DM Sans',system-ui,sans-serif;min-height:100vh;font-size:14px;line-height:1.6}
+
+/* ─── SIDEBAR ─────────────────────────── */
+.sidebar{width:252px;height:100vh;background:#0f172a;border-right:1px solid rgba(255,255,255,.06);position:fixed;top:0;left:0;display:flex;flex-direction:column;z-index:50;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#1e293b transparent}
+.sidebar::-webkit-scrollbar{width:3px}.sidebar::-webkit-scrollbar-thumb{background:#1e293b;border-radius:2px}
+
+/* ─── TOPBAR ───────────────────────────── */
+.topbar{position:fixed;top:0;left:252px;right:0;height:56px;background:rgba(15,23,42,.97);border-bottom:1px solid rgba(255,255,255,.07);backdrop-filter:blur(20px);display:flex;align-items:center;justify-content:space-between;padding:0 24px;z-index:40}
+
+/* ─── MAIN ───────────────────────────── */
+.main-wrap{margin-left:252px;padding-top:56px;min-height:100vh}
+.page-inner{padding:24px;max-width:1600px}
+
+/* ─── NAV ────────────────────────────── */
+.ni{display:flex;align-items:center;gap:9px;padding:8px 12px;margin:1px 6px;border-radius:9px;color:var(--txt4);font-size:13px;font-weight:500;text-decoration:none;transition:all .15s;cursor:pointer}
+.ni:hover{background:rgba(255,255,255,.06);color:var(--txt2)}
+.ni.act{background:rgba(255,255,255,.09);color:var(--txt);font-weight:700}
+.ni.nact{background:rgba(229,9,20,.12);color:#fca5a5;font-weight:700}
+.ni.hact{background:rgba(2,132,199,.12);color:#7dd3fc;font-weight:700}
+.ni.locked{opacity:.28;cursor:not-allowed}
+.ni i{width:15px;text-align:center;font-size:12px;flex-shrink:0}
+.slb{font-size:10px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:#1e3a5f;padding:10px 18px 3px}
+
+/* ─── CARDS ──────────────────────────── */
+.card{background:var(--card);border:1px solid var(--bdr);border-radius:14px}
+.card2{background:var(--card2);border:1px solid rgba(255,255,255,.06);border-radius:12px}
+.kpi{background:var(--card);border:1px solid var(--bdr);border-radius:14px;padding:20px;transition:transform .2s,box-shadow .2s,border-color .2s}
+.kpi:hover{transform:translateY(-2px);box-shadow:0 14px 40px rgba(0,0,0,.45);border-color:rgba(255,255,255,.14)}
+.kpi-val{font-family:'JetBrains Mono',monospace;font-weight:700;line-height:1;letter-spacing:-.03em;color:var(--txt)}
+.kpi-label{font-size:12px;font-weight:600;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin-top:6px}
+
+/* ─── BADGES ─────────────────────────── */
+.badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.03em;display:inline-block;white-space:nowrap}
+.badge-admin{background:rgba(239,68,68,.18);color:#fca5a5;border:1px solid rgba(239,68,68,.2)}
+.badge-manager{background:rgba(245,158,11,.18);color:#fcd34d;border:1px solid rgba(245,158,11,.2)}
+.badge-analyst{background:rgba(59,130,246,.18);color:#93c5fd;border:1px solid rgba(59,130,246,.2)}
+.badge-viewer{background:rgba(148,163,184,.18);color:#cbd5e1;border:1px solid rgba(148,163,184,.2)}
+
+/* ─── ALERTS ─────────────────────────── */
+.alert{border-radius:10px;padding:12px 16px;margin-bottom:12px;font-size:13.5px;display:flex;align-items:center;gap:10px;font-weight:500}
+.alert-success{background:rgba(5,150,105,.14);border:1px solid rgba(5,150,105,.28);color:#6ee7b7}
+.alert-danger{background:rgba(220,38,38,.14);border:1px solid rgba(220,38,38,.28);color:#fca5a5}
+.alert-warning{background:rgba(217,119,6,.14);border:1px solid rgba(217,119,6,.28);color:#fcd34d}
+.alert-info{background:rgba(99,102,241,.14);border:1px solid rgba(99,102,241,.28);color:#a5b4fc}
+
+/* ─── BUTTONS ────────────────────────── */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:8px 18px;border-radius:9px;font-size:13px;font-weight:600;border:none;cursor:pointer;transition:all .15s;text-decoration:none;font-family:inherit;white-space:nowrap}
+.btn-red{background:linear-gradient(135deg,#E50914,#b91c1c);color:#fff;box-shadow:0 2px 12px rgba(229,9,20,.3)}.btn-red:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.btn-blue{background:linear-gradient(135deg,#0284c7,#0369a1);color:#fff;box-shadow:0 2px 12px rgba(2,132,199,.3)}.btn-blue:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.btn-ghost{background:rgba(255,255,255,.06);border:1px solid var(--bdr);color:var(--txt3)}.btn-ghost:hover{background:rgba(255,255,255,.1);color:var(--txt2)}
+.btn-danger{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:#f87171}.btn-danger:hover{background:rgba(239,68,68,.18)}
+
+/* ─── INPUTS ─────────────────────────── */
+.inp{background:#0f172a;border:1px solid rgba(255,255,255,.1);color:var(--txt);border-radius:9px;padding:8px 12px;font-size:13px;transition:.15s;font-family:inherit;outline:none}
+.inp:focus{border-color:rgba(99,102,241,.55);box-shadow:0 0 0 3px rgba(99,102,241,.1)}
+.inp option{background:#1f2937;color:var(--txt)}
+
+/* ─── TABLE ──────────────────────────── */
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{padding:10px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--txt4);border-bottom:1px solid var(--bdr);white-space:nowrap;background:rgba(255,255,255,.02)}
+.tbl td{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--txt3)}
+.tbl tr:hover td{background:rgba(255,255,255,.03);color:var(--txt2)}
+
+/* ─── FILTER BAR ─────────────────────── */
+.fbar{background:var(--card);border:1px solid var(--bdr);border-radius:12px;padding:14px 18px;margin-bottom:18px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+
+/* ─── CHART CONTAINER ────────────────── */
+.ct{font-size:13px;font-weight:700;color:var(--txt2);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.ct i{font-size:14px}
+
+/* ─── INSIGHT CARD ───────────────────── */
+.insight-card{padding:16px 18px;border-radius:12px;border-left:3px solid;background:rgba(255,255,255,.03)}
+.insight-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.14em;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.insight-text{font-size:13px;line-height:1.65;color:var(--txt3)}
+.insight-text strong{color:var(--txt2)}
+
+/* ─── LOGOUT ─────────────────────────── */
+.logout-btn{display:flex;align-items:center;gap:6px;padding:7px 16px;border-radius:9px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:#fca5a5;font-size:13px;font-weight:700;text-decoration:none;transition:.15s;flex-shrink:0}
+.logout-btn:hover{background:rgba(239,68,68,.2);color:#fecaca;transform:translateY(-1px)}
+.logout-btn i{font-size:12px}
+
+/* ─── PROGRESS BAR ───────────────────── */
+.prog{height:5px;border-radius:3px;background:rgba(255,255,255,.06);overflow:hidden;margin-top:6px}
+.prog-fill{height:100%;border-radius:3px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+
+/* ─── NETFLIX BRAND ICON ─────────────── */
+.netflix-n{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;background:#E50914;color:#fff;font-weight:900;font-size:11px;border-radius:3px;font-family:'DM Sans',sans-serif;line-height:1;letter-spacing:-.02em;flex-shrink:0}
+
+/* ─── ANIMATIONS ─────────────────────── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes glow{0%,100%{opacity:.5}50%{opacity:1}}
+@keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+@keyframes shimmer{0%{background-position:-600px 0}100%{background-position:600px 0}}
+@keyframes pulse-ring{0%{transform:scale(1);opacity:.4}100%{transform:scale(1.4);opacity:0}}
+@keyframes blob-drift{0%{transform:scale(1) translate(0,0)}50%{transform:scale(1.15) translate(-20px,15px)}100%{transform:scale(1) translate(0,0)}}
+.fu{opacity:0;animation:fadeUp .55s ease forwards}
+.d1{animation-delay:.06s}.d2{animation-delay:.12s}.d3{animation-delay:.18s}.d4{animation-delay:.24s}.d5{animation-delay:.30s}.d6{animation-delay:.36s}
+
+/* ─── STAT SHIMMER ─────────────────────── */
+.loading-shimmer{background:linear-gradient(90deg,rgba(255,255,255,.03) 25%,rgba(255,255,255,.07) 50%,rgba(255,255,255,.03) 75%);background-size:600px 100%;animation:shimmer 1.5s infinite}
+
+/* ─── LEAFLET DARK ─────────────────────── */
+.leaflet-container{background:#111827!important}
+.leaflet-popup-content-wrapper{background:#1f2937;border:1px solid rgba(255,255,255,.1);color:#e2e8f0;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.leaflet-popup-tip{background:#1f2937}
+</style>
+</head>
+<body>
+
+<!-- ═══ SIDEBAR ═══════════════════════════════════════════════════════════ -->
+<aside class="sidebar">
+  <div style="padding:16px 14px 14px;border-bottom:1px solid rgba(255,255,255,.06)">
+    <a href="{{ url_for('home') }}" style="text-decoration:none;display:flex;align-items:center;gap:10px">
+      <div style="width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#E50914 0%,#7c3aed 55%,#0284c7 100%);display:flex;align-items:center;justify-content:center;animation:float 4.5s ease-in-out infinite;flex-shrink:0;box-shadow:0 4px 16px rgba(229,9,20,.35)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M4 4h6l2 6H8l-4 8V4zm10 0h6v18l-3-6-3 6V4z"/></svg>
+      </div>
+      <div><div style="font-weight:900;color:var(--txt);font-size:15.5px;letter-spacing:-.03em">StayFlix</div><div style="font-size:9.5px;color:#1e3a5f;font-weight:700;letter-spacing:.1em;text-transform:uppercase">Analytics Pro</div></div>
+    </a>
+  </div>
+
+  <div style="padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.06)">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#E50914);display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:14px;flex-shrink:0;position:relative">
+        {{ (session.first_name or '?')[0]|upper }}
+        <div style="position:absolute;bottom:0;right:0;width:9px;height:9px;border-radius:50%;background:#10b981;border:2px solid #0f172a"></div>
+      </div>
+      <div style="min-width:0;flex:1">
+        <div style="font-size:13px;font-weight:700;color:var(--txt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ session.first_name }} {{ session.last_name }}</div>
+        <span class="badge badge-{{ session.role }}">{{ {'admin':'Admin','manager':'Manager','analyst':'Analyste','viewer':'Viewer'}[session.role] }}</span>
+      </div>
+    </div>
+  </div>
+
+  <nav style="flex:1;padding:8px 0">
+    <div class="slb">Vue générale</div>
+    <a href="{{ url_for('home') }}" class="ni {% if request.endpoint=='home' %}act{% endif %}"><i class="fa-solid fa-gauge-high"></i>Tableau de bord</a>
+
+    <div class="slb" style="color:#7f1d1d;margin-top:6px">
+      <span class="netflix-n">N</span>&nbsp; NETFLIX
+    </div>
+    <a href="{{ url_for('netflix_dashboard') }}" class="ni {% if request.endpoint=='netflix_dashboard' %}nact{% endif %}"><i class="fa-solid fa-chart-pie"></i>Dashboard Netflix</a>
+    <a href="{{ url_for('netflix_content') }}" class="ni {% if request.endpoint=='netflix_content' %}nact{% endif %}"><i class="fa-solid fa-film"></i>Contenu & Durées</a>
+    <a href="{{ url_for('netflix_ratings') }}" class="ni {% if request.endpoint=='netflix_ratings' %}nact{% endif %}"><i class="fa-solid fa-star-half-stroke"></i>Ratings & Audience</a>
+    <a href="{{ url_for('netflix_timeline') }}" class="ni {% if request.endpoint=='netflix_timeline' %}nact{% endif %}"><i class="fa-solid fa-timeline"></i>Évolution Temporelle</a>
+    <a href="{{ url_for('netflix_search') }}" class="ni {% if request.endpoint=='netflix_search' %}nact{% endif %}"><i class="fa-solid fa-magnifying-glass-chart"></i>Explorateur Avancé</a>
+
+    <div class="slb" style="color:#0c4a6e;margin-top:6px"><i class="fa-solid fa-hotel" style="font-size:9px"></i> HÔTEL</div>
+    <a href="{{ url_for('hotel_dashboard') }}" class="ni {% if request.endpoint=='hotel_dashboard' %}hact{% endif %}"><i class="fa-solid fa-chart-column"></i>Dashboard Hôtel</a>
+    <a href="{{ url_for('hotel_bookings') }}" class="ni {% if request.endpoint=='hotel_bookings' %}hact{% endif %}"><i class="fa-solid fa-calendar-check"></i>Réservations</a>
+    {% if session.role in ['admin','manager','analyst'] %}
+    <a href="{{ url_for('hotel_revenue') }}" class="ni {% if request.endpoint=='hotel_revenue' %}hact{% endif %}"><i class="fa-solid fa-coins"></i>Revenus & ADR</a>
+    {% else %}
+    <div class="ni locked" title="Réservé Analyste+"><i class="fa-solid fa-lock"></i>Revenus & ADR</div>
+    {% endif %}
+    <a href="{{ url_for('hotel_cancellations') }}" class="ni {% if request.endpoint=='hotel_cancellations' %}hact{% endif %}"><i class="fa-solid fa-circle-xmark"></i>Annulations</a>
+    <a href="{{ url_for('hotel_map') }}" class="ni {% if request.endpoint=='hotel_map' %}hact{% endif %}"><i class="fa-solid fa-earth-europe"></i>Carte Mondiale</a>
+    <a href="{{ url_for('hotel_search') }}" class="ni {% if request.endpoint=='hotel_search' %}hact{% endif %}"><i class="fa-solid fa-sliders"></i>Explorateur Avancé</a>
+
+    <div class="slb" style="margin-top:6px">Compte</div>
+    <a href="{{ url_for('profile') }}" class="ni {% if request.endpoint=='profile' %}act{% endif %}"><i class="fa-solid fa-circle-user"></i>Mon Profil</a>
+    <a href="{{ url_for('contact') }}" class="ni {% if request.endpoint=='contact' %}act{% endif %}"><i class="fa-solid fa-envelope"></i>Contact</a>
+    {% if session.role in ['admin','manager','analyst'] %}<a href="{{ url_for('admin_panel') }}" class="ni {% if request.endpoint=='admin_panel' %}act{% endif %}"><i class="fa-solid fa-shield-halved"></i>Administration</a>{% endif %}
+  </nav>
+
+  <!-- SIDEBAR LOGOUT — ALWAYS VISIBLE -->
+  <div style="padding:10px 8px;border-top:1px solid rgba(255,255,255,.06)">
+    <a href="{{ url_for('logout') }}" class="logout-btn" style="width:calc(100% - 0px);justify-content:center">
+      <i class="fa-solid fa-power-off"></i> Déconnexion
+    </a>
+  </div>
+</aside>
+
+<!-- ═══ TOPBAR ══════════════════════════════════════════════════════════════ -->
+<header class="topbar">
+  <div style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--txt4);min-width:0">
+    <i class="fa-solid fa-location-dot" style="font-size:10px;flex-shrink:0;color:var(--txt4)"></i>
+    <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{% block breadcrumb %}Accueil{% endblock %}</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+    {% if session.role in ['admin','manager'] %}
+    <a href="{{ url_for('export_netflix') }}" style="display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;background:rgba(229,9,20,.09);border:1px solid rgba(229,9,20,.2);color:#fca5a5;font-size:12px;font-weight:600;text-decoration:none;transition:.15s" onmouseover="this.style.background='rgba(229,9,20,.18)'" onmouseout="this.style.background='rgba(229,9,20,.09)'"><i class="fa-solid fa-file-arrow-down" style="font-size:10px"></i>Export N</a>
+    <a href="{{ url_for('export_hotel') }}" style="display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;background:rgba(2,132,199,.09);border:1px solid rgba(2,132,199,.2);color:#7dd3fc;font-size:12px;font-weight:600;text-decoration:none;transition:.15s" onmouseover="this.style.background='rgba(2,132,199,.18)'" onmouseout="this.style.background='rgba(2,132,199,.09)'"><i class="fa-solid fa-file-arrow-down" style="font-size:10px"></i>Export H</a>
+    <div style="width:1px;height:18px;background:var(--bdr)"></div>
+    {% endif %}
+    <span class="badge badge-{{ session.role }}">{{ session.role }}</span>
+    <span style="font-size:13px;color:var(--txt3);font-weight:500">{{ session.first_name }}</span>
+    <div style="width:1px;height:18px;background:var(--bdr)"></div>
+    <!-- TOPBAR LOGOUT — ALWAYS VISIBLE -->
+    <a href="{{ url_for('logout') }}" class="logout-btn"><i class="fa-solid fa-right-from-bracket"></i>Déconnexion</a>
+  </div>
+</header>
+
+<!-- ═══ CONTENT ══════════════════════════════════════════════════════════════ -->
+<div class="main-wrap"><div class="page-inner">
+{% with messages = get_flashed_messages(with_categories=true) %}{% for cat,msg in messages %}<div class="alert alert-{{ cat }}"><i class="fa-solid fa-circle-info"></i>{{ msg }}</div>{% endfor %}{% endwith %}
+{% block content %}{% endblock %}
+</div></div>
+
+<!-- ═══ GLOBAL JS ════════════════════════════════════════════════════════════ -->
+<script>
+// Chart.js global defaults – LARGER FONTS for projector
+Chart.defaults.color = '#9ca3af';
+Chart.defaults.borderColor = 'rgba(255,255,255,.06)';
+Chart.defaults.font.family = "'DM Sans', system-ui";
+Chart.defaults.font.size = 13;
+Chart.defaults.plugins.legend.labels.boxWidth = 12;
+Chart.defaults.plugins.legend.labels.padding = 16;
+Chart.defaults.plugins.legend.labels.font = {size:13,weight:'600'};
+Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(15,23,42,.97)';
+Chart.defaults.plugins.tooltip.borderColor = 'rgba(255,255,255,.1)';
+Chart.defaults.plugins.tooltip.borderWidth = 1;
+Chart.defaults.plugins.tooltip.titleColor = '#f9fafb';
+Chart.defaults.plugins.tooltip.bodyColor = '#9ca3af';
+Chart.defaults.plugins.tooltip.titleFont = {size:13,weight:'700'};
+Chart.defaults.plugins.tooltip.bodyFont = {size:12};
+Chart.defaults.plugins.tooltip.padding = 12;
+Chart.defaults.plugins.tooltip.cornerRadius = 9;
+Chart.defaults.animation.duration = 1000;
+Chart.defaults.animation.easing = 'easeOutQuart';
+Chart.defaults.scales = {
+  ...(Chart.defaults.scales||{}),
+};
+
+// Palettes
+const P  = ['#E50914','#0284c7','#7c3aed','#d97706','#059669','#db2777','#f97316','#14b8a6','#6366f1','#84cc16'];
+const RP = ['#E50914','#ef4444','#f87171','#fca5a5','#fed7aa','#fef3c7'];
+const BP = ['#0284c7','#0ea5e9','#38bdf8','#7dd3fc','#bae6fd','#e0f2fe'];
+const GP = ['#059669','#10b981','#34d399','#6ee7b7','#a7f3d0','#d1fae5'];
+const PP = ['#7c3aed','#8b5cf6','#a78bfa','#c4b5fd','#ddd6fe','#ede9fe'];
+const AP = ['#E50914','#0284c7','#7c3aed','#059669','#d97706','#db2777'];
+
+// Animated counter with easing
+function animCount(el, target, dur, pf, sf, dc) {
+  if(!el) return;
+  dur=dur||1500; pf=pf||''; sf=sf||''; dc=dc||0;
+  const t0 = performance.now();
+  (function u(now) {
+    const p = Math.min((now-t0)/dur, 1);
+    const ease = 1 - Math.pow(1-p, 4);
+    const val = target * ease;
+    el.textContent = pf + (dc>0 ? val.toFixed(dc) : Math.floor(val).toLocaleString('fr-FR')) + sf;
+    if(p<1) requestAnimationFrame(u);
+  })(t0);
+}
+
+// IntersectionObserver for counters
+const _io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if(e.isIntersecting && !e.target._counted) {
+      e.target._counted = 1;
+      animCount(e.target,
+        parseFloat(e.target.dataset.count||0), 1500,
+        e.target.dataset.prefix||'',
+        e.target.dataset.suffix||'',
+        parseInt(e.target.dataset.dec||0));
+    }
+  });
+}, {threshold:0.15});
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('[data-count]').forEach(el => _io.observe(el));
+});
+
+// Utility: create/replace chart
+function mkChart(id, type, labels, datasets, opts) {
+  const el = document.getElementById(id);
+  if(!el) return null;
+  if(el._chart) el._chart.destroy();
+  const c = new Chart(el, {type, data:{labels, datasets}, options:{responsive:true, maintainAspectRatio:true, ...opts}});
+  el._chart = c; return c;
+}
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,258 @@
+{% extends 'base.html' %}
+{% block title %}Tableau de bord — StayFlix Analytics{% endblock %}
+{% block breadcrumb %}<span style="color:var(--txt2);font-weight:600">Tableau de bord général</span>{% endblock %}
+{% block content %}
+<style>
+@keyframes blob{0%{transform:scale(1) translate(0,0)}100%{transform:scale(1.18) translate(-25px,18px)}}
+@keyframes blob2{0%{transform:scale(1)}100%{transform:scale(1.22) translate(22px,-18px)}}
+</style>
+
+<!-- LIVE TICKER -->
+<div style="background:var(--card);border:1px solid var(--bdr2);border-radius:11px;padding:9px 18px;margin-bottom:20px;overflow:hidden;display:flex;align-items:center;gap:14px">
+  <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+    <div style="width:7px;height:7px;border-radius:50%;background:#e8192c;animation:pulse-dot 1.5s ease-in-out infinite"></div>
+    <span style="font-size:10px;font-weight:800;letter-spacing:.12em;color:#e8192c;text-transform:uppercase">Live</span>
+  </div>
+  <div style="overflow:hidden;flex:1">
+    <div style="display:flex;gap:30px;animation:ticker 32s linear infinite;white-space:nowrap;width:max-content">
+      {% for label, val, color in [
+        ('Titres Netflix', ns.total|default(0)|int, '#e8192c'),
+        ('Films', ns.movies|default(0)|int, '#8b5cf6'),
+        ('Séries TV', ns.shows|default(0)|int, '#6366f1'),
+        ('Réservations Hotel', hs.total|default(0)|int, '#0ea5e9'),
+        ('Taux Annulation', (hs.cancel_rate|default(0)|string)+'%', '#f59e0b'),
+        ('ADR Moyen', (hs.avg_adr|default(0))~'€', '#10b981'),
+        ('Pays Clients', hs.countries|default(0)|int, '#06b6d4'),
+        ('Période Netflix', '2008–2020', '#a78bfa'),
+      ] %}
+      <span style="font-size:12.5px;color:var(--txt3);font-weight:500"> <span style="color:{{ color }};font-weight:800">{{ val }}</span> &nbsp;{{ label }} &nbsp;·</span>
+      {% endfor %}
+      {% for label, val, color in [
+        ('Titres Netflix', ns.total|default(0)|int, '#e8192c'),
+        ('Films', ns.movies|default(0)|int, '#8b5cf6'),
+        ('Séries TV', ns.shows|default(0)|int, '#6366f1'),
+        ('Réservations Hotel', hs.total|default(0)|int, '#0ea5e9'),
+        ('Taux Annulation', (hs.cancel_rate|default(0)|string)+'%', '#f59e0b'),
+        ('ADR Moyen', (hs.avg_adr|default(0))~'€', '#10b981'),
+        ('Pays Clients', hs.countries|default(0)|int, '#06b6d4'),
+        ('Période Netflix', '2008–2020', '#a78bfa'),
+      ] %}
+      <span style="font-size:12.5px;color:var(--txt3);font-weight:500"> <span style="color:{{ color }};font-weight:800">{{ val }}</span> &nbsp;{{ label }} &nbsp;·</span>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- HERO BANNER -->
+<div style="position:relative;border-radius:20px;overflow:hidden;padding:46px 40px 40px;margin-bottom:22px;background:linear-gradient(135deg,rgba(232,25,44,.1) 0%,rgba(15,21,32,.98) 42%,rgba(14,165,233,.08) 100%);border:1px solid rgba(255,255,255,.1)">
+  <div style="position:absolute;top:-70px;right:-60px;width:340px;height:340px;border-radius:50%;background:radial-gradient(circle,rgba(232,25,44,.12),transparent 70%);animation:blob 7s ease-in-out infinite alternate;pointer-events:none"></div>
+  <div style="position:absolute;bottom:-80px;left:-40px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(14,165,233,.09),transparent 70%);animation:blob2 9s ease-in-out infinite alternate;pointer-events:none"></div>
+  <div style="position:relative;z-index:2;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:20px">
+    <div style="max-width:560px">
+      <div class="fu d1" style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+        <div style="width:44px;height:44px;border-radius:13px;background:linear-gradient(135deg,#e8192c,#8b5cf6,#0ea5e9);display:flex;align-items:center;justify-content:center;animation:float 4s ease-in-out infinite;box-shadow:0 6px 20px rgba(232,25,44,.4)">
+          <i class="fa-brands fa-netflix" style="color:#fff;font-size:18px"></i>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:900;letter-spacing:.15em;text-transform:uppercase;color:#e8192c">StayFlix Analytics Pro</div>
+          <div style="font-size:10px;color:var(--txt3);font-weight:600">ENSEA — Intelligence analytique 2025‑2026</div>
+        </div>
+      </div>
+      <h1 class="fu d2" style="font-size:clamp(24px,3.5vw,40px);font-weight:900;color:#fff;line-height:1.1;margin-bottom:12px;letter-spacing:-.04em">
+        Bienvenue, <span style="background:linear-gradient(90deg,#e8192c 0%,#8b5cf6 50%,#0ea5e9 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">{{ session.first_name }} {{ session.last_name }}</span>
+      </h1>
+      <p class="fu d3" style="font-size:14px;color:var(--txt2);line-height:1.7;margin-bottom:24px">
+        Explorez <strong style="color:var(--txt)">{{ ns.total|default(0) }} titres Netflix</strong> (2008–2020) et <strong style="color:var(--txt)">{{ hs.total|default(0)|int }} réservations hôtelières</strong> à travers des visualisations dynamiques, des analyses statistiques avancées et des filtres temps réel.
+      </p>
+      <div class="fu d4" style="display:flex;gap:10px;flex-wrap:wrap">
+        <a href="{{ url_for('netflix_dashboard') }}" class="btn btn-red"><i class="fa-brands fa-netflix"></i>Netflix Analytics</a>
+        <a href="{{ url_for('hotel_dashboard') }}" class="btn btn-blue"><i class="fa-solid fa-hotel"></i>Hôtel Analytics</a>
+        <a href="{{ url_for('hotel_map') }}" class="btn btn-ghost"><i class="fa-solid fa-earth-europe" style="color:#0ea5e9"></i>Carte mondiale</a>
+      </div>
+    </div>
+    <!-- Mini donuts -->
+    <div class="fu d5" style="display:flex;gap:14px;align-items:center;flex-shrink:0">
+      <div style="text-align:center">
+        <div style="width:96px;height:96px;position:relative">
+          <canvas id="heroD1" width="96" height="96"></canvas>
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+            <span style="font-size:20px;font-weight:900;color:#e8192c">{{ ((ns.movies|default(0))/(ns.total|default(1))*100)|round(0)|int }}%</span>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--txt3);margin-top:5px;font-weight:600">Films</div>
+      </div>
+      <div style="text-align:center">
+        <div style="width:96px;height:96px;position:relative">
+          <canvas id="heroD2" width="96" height="96"></canvas>
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+            <span style="font-size:20px;font-weight:900;color:#10b981">{{ (100-(hs.cancel_rate|default(0)))|round(0)|int }}%</span>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--txt3);margin-top:5px;font-weight:600">Confirmées</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- KPI GRID ANIMÉE -->
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:20px">
+  {% set kpis=[
+    ('fa-brands fa-netflix','Titres Netflix',ns.total|default(0),'','#e8192c','rgba(232,25,44,.1)',0),
+    ('fa-solid fa-film','Films',ns.movies|default(0),'','#8b5cf6','rgba(139,92,246,.1)',0),
+    ('fa-solid fa-tv','Séries TV',ns.shows|default(0),'','#6366f1','rgba(99,102,241,.1)',0),
+    ('fa-solid fa-clock','Durée moy. film',ns.avg_duration|default(0),' min','#f59e0b','rgba(245,158,11,.1)',1),
+    ('fa-solid fa-hotel','Réservations',hs.total|default(0),'','#0ea5e9','rgba(14,165,233,.1)',0),
+    ('fa-solid fa-ban','Taux Annulation',hs.cancel_rate|default(0),'%','#f87171','rgba(248,113,113,.1)',1),
+    ('fa-solid fa-coins','ADR Moyen',hs.avg_adr|default(0),'€','#f59e0b','rgba(245,158,11,.1)',1),
+    ('fa-solid fa-earth-europe','Pays Clients',hs.countries|default(0),'','#10b981','rgba(16,185,129,.1)',0),
+  ]%}
+  {% for icon, label, val, suf, color, bg, dec in kpis %}
+  <div class="kpi fu d{{ loop.index%4+1 }}" style="border-top:3px solid {{ color }};background:{{ bg }}">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div class="icon-box" style="background:{{ bg }};border:1px solid {{ color }}30">
+        <i class="{{ icon }}" style="color:{{ color }};font-size:14px"></i>
+      </div>
+      <div style="width:7px;height:7px;border-radius:50%;background:{{ color }};animation:pulse-dot 2.5s ease-in-out infinite"></div>
+    </div>
+    <div class="stat-num" data-count="{{ val }}" data-suffix="{{ suf }}" {% if dec>0 %}data-dec="{{ dec }}"{% endif %} style="font-size:26px;color:#fff;margin-bottom:5px">0</div>
+    <div style="font-size:11px;color:var(--txt3);font-weight:700;text-transform:uppercase;letter-spacing:.06em">{{ label }}</div>
+    <div class="progress" style="margin-top:10px"><div class="progress-fill" style="background:{{ color }};width:{{ [val/(ns.total|default(1))*100, 100]|min if 'Netflix' in label or 'Film' in label or 'Série' in label else 60 }}%"></div></div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- PANELS NETFLIX + HOTEL -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:20px">
+  <!-- Netflix -->
+  <div class="card fu d1" style="border-top:3px solid #e8192c;overflow:hidden">
+    <div style="padding:18px 20px 14px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="icon-box" style="background:rgba(232,25,44,.12);border:1px solid rgba(232,25,44,.2)"><i class="fa-brands fa-netflix" style="color:#e8192c;font-size:15px"></i></div>
+        <div><div style="font-weight:800;color:var(--txt);font-size:14px">Netflix Analytics</div><div style="font-size:10.5px;color:var(--txt3)">Analyse des données Netflix · 2008–2020</div></div>
+      </div>
+      <a href="{{ url_for('netflix_dashboard') }}" class="btn btn-red" style="font-size:11.5px;padding:6px 14px">Explorer <i class="fa-solid fa-arrow-right" style="font-size:10px"></i></a>
+    </div>
+    <div style="padding:16px 20px">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px">
+        {% for v,l,c in [(ns.movies|default(0),'Films','#e8192c'),(ns.shows|default(0),'Séries','#8b5cf6'),(ns.ratings|default(0),'Ratings','#6366f1')] %}
+        <div style="text-align:center;padding:10px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07)">
+          <div style="font-size:18px;font-weight:900;color:{{ c }}" data-count="{{ v }}">0</div>
+          <div style="font-size:9.5px;color:var(--txt3);margin-top:3px;font-weight:700;text-transform:uppercase">{{ l }}</div>
+        </div>
+        {% endfor %}
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">
+        {% for icon,label,ep in [('fa-chart-pie','Dashboard','netflix_dashboard'),('fa-film','Contenu','netflix_content'),('fa-star','Ratings','netflix_ratings'),('fa-sliders','Explorer','netflix_search')] %}
+        <a href="{{ url_for(ep) }}" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border-radius:9px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);text-decoration:none;transition:.18s" onmouseover="this.style.background='rgba(232,25,44,.1)';this.style.borderColor='rgba(232,25,44,.25)'" onmouseout="this.style.background='rgba(255,255,255,.04)';this.style.borderColor='rgba(255,255,255,.06)'">
+          <i class="fa-solid {{ icon }}" style="color:#e8192c;font-size:13px"></i>
+          <span style="font-size:9.5px;color:var(--txt3);font-weight:700">{{ label }}</span>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Hotel -->
+  <div class="card fu d2" style="border-top:3px solid #0ea5e9;overflow:hidden">
+    <div style="padding:18px 20px 14px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="icon-box" style="background:rgba(14,165,233,.12);border:1px solid rgba(14,165,233,.2)"><i class="fa-solid fa-hotel" style="color:#0ea5e9;font-size:14px"></i></div>
+        <div><div style="font-weight:800;color:var(--txt);font-size:14px">Hôtel Analytics</div><div style="font-size:10.5px;color:var(--txt3)">21 996 réservations · Resort & City Hotel</div></div>
+      </div>
+      <a href="{{ url_for('hotel_dashboard') }}" class="btn btn-blue" style="font-size:11.5px;padding:6px 14px">Explorer <i class="fa-solid fa-arrow-right" style="font-size:10px"></i></a>
+    </div>
+    <div style="padding:16px 20px">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px">
+        {% for v,l,c,dc in [(hs.total|default(0),'Total','#0ea5e9',0),(hs.cancel_rate|default(0),'Annulation %','#f87171',1),(hs.avg_adr|default(0),'ADR €','#f59e0b',1)] %}
+        <div style="text-align:center;padding:10px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07)">
+          <div style="font-size:18px;font-weight:900;color:{{ c }}" data-count="{{ v }}" {% if dc>0 %}data-dec="{{ dc }}"{% endif %}>0</div>
+          <div style="font-size:9.5px;color:var(--txt3);margin-top:3px;font-weight:700;text-transform:uppercase">{{ l }}</div>
+        </div>
+        {% endfor %}
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">
+        {% for icon,label,ep in [('fa-chart-column','Dashboard','hotel_dashboard'),('fa-calendar-check','Réserv.','hotel_bookings'),('fa-earth-europe','Carte','hotel_map'),('fa-sliders','Explorer','hotel_search')] %}
+        <a href="{{ url_for(ep) }}" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border-radius:9px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);text-decoration:none;transition:.18s" onmouseover="this.style.background='rgba(14,165,233,.1)';this.style.borderColor='rgba(14,165,233,.25)'" onmouseout="this.style.background='rgba(255,255,255,.04)';this.style.borderColor='rgba(255,255,255,.06)'">
+          <i class="fa-solid {{ icon }}" style="color:#0ea5e9;font-size:13px"></i>
+          <span style="font-size:9.5px;color:var(--txt3);font-weight:700">{{ label }}</span>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ACCESS MATRIX -->
+<div class="card fu d3" style="margin-bottom:20px;overflow:hidden">
+  <div style="padding:16px 20px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:10px">
+    <div class="icon-box" style="background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.2)"><i class="fa-solid fa-shield-halved" style="color:#a78bfa;font-size:14px"></i></div>
+    <div><div style="font-weight:800;color:var(--txt);font-size:14px">Matrice des accès par rôle</div><div style="font-size:10.5px;color:var(--txt3)">Fonctionnalités disponibles selon votre niveau d'accès</div></div>
+    <div style="margin-left:auto"><span class="badge badge-{{ session.role }}" style="font-size:11.5px;padding:4px 14px">Votre rôle : {{ {'admin':'Administrateur','manager':'Gestionnaire','analyst':'Analyste','viewer':'Observateur'}[session.role] }}</span></div>
+  </div>
+  <div style="overflow-x:auto">
+    <table class="tbl">
+      <thead><tr>
+        <th style="padding:11px 16px">Module</th>
+        <th style="text-align:center;color:#fca5a5"><i class="fa-solid fa-crown" style="margin-right:4px"></i>Admin</th>
+        <th style="text-align:center;color:#fcd34d"><i class="fa-solid fa-briefcase" style="margin-right:4px"></i>Manager</th>
+        <th style="text-align:center;color:#93c5fd"><i class="fa-solid fa-chart-bar" style="margin-right:4px"></i>Analyste</th>
+        <th style="text-align:center;color:#94a3b8"><i class="fa-solid fa-eye" style="margin-right:4px"></i>Viewer</th>
+      </tr></thead>
+      <tbody>
+        {% for row in [
+          ('Netflix — Dashboard, Contenu, Ratings, Timeline, Explorateur','✅','✅','✅','✅'),
+          ('Hôtel — Dashboard, Réservations, Annulations, Carte, Explorateur','✅','✅','✅','✅'),
+          ('Hôtel — Revenus & ADR (données financières)','✅','✅','✅','🔒'),
+          ('Export Excel Netflix + Hôtel','✅','✅','🔒','🔒'),
+          ('Panel Administration (gestion + logs)','✅','✅','✅','🔒'),
+          ('Gestion utilisateurs (CRUD complet)','✅','🔒','🔒','🔒'),
+          ('Filtres dynamiques temps réel','✅','✅','✅','✅'),
+          ('Commentaires analytiques adaptatifs','✅','✅','✅','✅'),
+        ] %}
+        <tr>
+          <td style="padding:9px 16px;color:var(--txt);font-weight:500">{{ row[0] }}</td>
+          {% for cell in row[1:] %}
+          <td style="text-align:center;font-size:15px;padding:9px 16px">{{ cell }}</td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- MINI CHARTS + INSIGHTS -->
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px">
+  <div class="card" style="padding:18px"><div class="ct"><i class="fa-brands fa-netflix" style="color:#e8192c"></i>Netflix — Répartition du catalogue</div><canvas id="hD1" height="190"></canvas></div>
+  <div class="card" style="padding:18px"><div class="ct"><i class="fa-solid fa-hotel" style="color:#0ea5e9"></i>Hôtel — Resort vs City Hotel</div><canvas id="hD2" height="190"></canvas></div>
+  <div class="card" style="padding:18px"><div class="ct"><i class="fa-solid fa-circle-check" style="color:#10b981"></i>Hôtel — Statuts des réservations</div><canvas id="hD3" height="190"></canvas></div>
+</div>
+
+<!-- INSIGHTS ROW -->
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:13px">
+  {% for color,icon,title,text in [
+    ('#e8192c','fa-lightbulb','Insight Netflix','Netflix a multiplié ses ajouts par 5 entre 2014 et 2019. Le rating TV-MA représente 34% du catalogue — stratégie clairement orientée audience adulte. 70% de films, 30% de séries.'),
+    ('#0ea5e9','fa-building','Insight Hôtel','37% des réservations sont annulées. Le City Hotel concentre 58% du volume. Les clients d\'Online TA sont les plus nombreux mais aussi les plus volatils (42% annulation).'),
+    ('#8b5cf6','fa-rocket','Recommandation','Croisez les filtres Hôtel × Mois pour identifier la saisonnalité. Utilisez l\'explorateur Netflix pour cibler des ratings précis. La Carte mondiale révèle 98 pays clients.'),
+  ] %}
+  <div class="card fu d{{ loop.index+1 }}" style="padding:16px;border-left:3px solid {{ color }}">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:9px">
+      <div class="icon-box" style="width:30px;height:30px;background:{{ color }}18;border:1px solid {{ color }}30"><i class="fa-solid {{ icon }}" style="color:{{ color }};font-size:12px"></i></div>
+      <span style="font-size:12.5px;font-weight:800;color:var(--txt)">{{ title }}</span>
+    </div>
+    <p style="font-size:12px;color:var(--txt2);line-height:1.7;margin:0">{{ text }}</p>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const ns = {{ ns|tojson }}, hs = {{ hs|tojson }};
+new Chart('heroD1',{type:'doughnut',data:{labels:['Films','Séries'],datasets:[{data:[ns.movies||0,ns.shows||0],backgroundColor:['#e8192c','#8b5cf6'],borderWidth:0}]},options:{plugins:{legend:{display:false}},cutout:'72%',animation:{animateScale:true}}});
+new Chart('heroD2',{type:'doughnut',data:{labels:['Confirmées','Annulées'],datasets:[{data:[100-(hs.cancel_rate||0),hs.cancel_rate||0],backgroundColor:['#10b981','rgba(248,113,113,.4)'],borderWidth:0}]},options:{plugins:{legend:{display:false}},cutout:'72%',animation:{animateScale:true}}});
+new Chart('hD1',{type:'doughnut',data:{labels:['Films','Séries TV'],datasets:[{data:[ns.movies||0,ns.shows||0],backgroundColor:['#e8192c','#8b5cf6'],borderWidth:0,hoverOffset:6}]},options:{plugins:{legend:{position:'bottom'}},cutout:'58%',animation:{animateScale:true,duration:1200}}});
+new Chart('hD2',{type:'doughnut',data:{labels:['Resort Hotel','City Hotel'],datasets:[{data:[hs.resort_count||9327,hs.city_count||12669],backgroundColor:['#0ea5e9','#8b5cf6'],borderWidth:0,hoverOffset:6}]},options:{plugins:{legend:{position:'bottom'}},cutout:'58%',animation:{animateScale:true,duration:1200}}});
+new Chart('hD3',{type:'doughnut',data:{labels:['Confirmées','Annulées'],datasets:[{data:[100-(hs.cancel_rate||0),hs.cancel_rate||0],backgroundColor:['#10b981','#e8192c'],borderWidth:0,hoverOffset:6}]},options:{plugins:{legend:{position:'bottom'}},cutout:'58%',animation:{animateScale:true,duration:1200}}});
+</script>
+{% endblock %}

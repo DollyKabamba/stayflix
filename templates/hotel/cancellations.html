@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}Annulations — Hôtel{% endblock %}
+{% block breadcrumb %}<span style="color:#0891B2"><i class="fa-solid fa-hotel" style="margin-right:4px"></i>Hôtel</span> / Annulations{% endblock %}
+{% block content %}
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px">
+  <div class="kpi" style="border-top:2px solid #ef4444">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><div style="width:30px;height:30px;border-radius:8px;background:rgba(239,68,68,.1);display:flex;align-items:center;justify-content:center"><i class="fa-solid fa-ban" style="color:#ef4444;font-size:12px"></i></div></div>
+    <div style="font-size:26px;font-weight:800;color:#fff;margin-bottom:3px"><span data-count="{{ s.cancel_rate }}" data-dec="1">0</span><span style="font-size:13px;color:#475569"> %</span></div>
+    <div style="font-size:10px;color:#334155;font-weight:700;text-transform:uppercase">Taux d'annulation global</div>
+  </div>
+  <div class="kpi" style="border-top:2px solid #E50914">
+    <div class="stat-num" data-count="{{ s.total_canceled }}" style="font-size:26px;color:#fff;margin-bottom:4px">0</div>
+    <div style="font-size:10px;color:#334155;font-weight:700;text-transform:uppercase">Réservations annulées</div>
+  </div>
+  <div class="kpi" style="border-top:2px solid #059669">
+    <div class="stat-num" data-count="{{ s.total_confirmed }}" style="font-size:26px;color:#fff;margin-bottom:4px">0</div>
+    <div style="font-size:10px;color:#334155;font-weight:700;text-transform:uppercase">Réservations confirmées</div>
+  </div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+  <div class="card" style="padding:16px"><div class="ct"><i class="fa-solid fa-hotel" style="color:#ef4444"></i>Annulations par hôtel (%)</div><canvas id="cCRH" height="200"></canvas></div>
+  <div class="card" style="padding:16px"><div class="ct"><i class="fa-solid fa-file-contract" style="color:#d97706"></i>Annulations par type dépôt (%)</div><canvas id="cCRD" height="200"></canvas></div>
+</div>
+<div style="display:grid;grid-template-columns:1.5fr 1fr;gap:12px;margin-bottom:12px">
+  <div class="card" style="padding:16px"><div class="ct"><i class="fa-solid fa-tags" style="color:#7c3aed"></i>Annulations par segment marché (%)</div><canvas id="cCRMS" height="200"></canvas></div>
+  <div class="card" style="padding:16px"><div class="ct"><i class="fa-solid fa-circle-check" style="color:#059669"></i>Statuts de réservation</div><canvas id="cRS" height="200"></canvas></div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+  <div class="card" style="padding:16px"><div class="ct"><i class="fa-solid fa-calendar-days" style="color:#0891B2"></i>Taux annulation par mois (%)</div><canvas id="cCRMO" height="180"></canvas></div>
+  <div class="card" style="padding:16px"><div class="ct"><i class="fa-solid fa-hourglass-half" style="color:#E50914"></i>Impact du lead time sur annulations (%)</div><canvas id="cCRLT" height="180"></canvas></div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const s = {{ s | tojson }};
+new Chart('cCRH',{type:'bar',data:{labels:s.crh_labels,datasets:[{data:s.crh_values,backgroundColor:['rgba(239,68,68,.8)','rgba(239,68,68,.5)'],borderRadius:6,borderWidth:0}]},options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(255,255,255,.04)'},max:100}}}});
+new Chart('cCRD',{type:'bar',data:{labels:s.crdep_labels,datasets:[{data:s.crdep_values,backgroundColor:P,borderRadius:5,borderWidth:0}]},options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(255,255,255,.04)'},max:100}}}});
+new Chart('cCRMS',{type:'bar',data:{labels:s.crms_labels,datasets:[{data:s.crms_values,backgroundColor:s.crms_values.map(v=>v>50?'rgba(239,68,68,.75)':'rgba(8,145,178,.75)'),borderRadius:4,borderWidth:0}]},options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},max:100},y:{grid:{display:false},ticks:{font:{size:10}}}}}});
+new Chart('cRS',{type:'doughnut',data:{labels:s.rs_labels,datasets:[{data:s.rs_counts,backgroundColor:['#059669','#ef4444','#d97706'],borderWidth:0,hoverOffset:4}]},options:{plugins:{legend:{position:'bottom'}},cutout:'55%',animation:{animateScale:true}}});
+new Chart('cCRMO',{type:'line',data:{labels:s.crmo_labels,datasets:[{label:'Annulation %',data:s.crmo_values,borderColor:'#0891B2',backgroundColor:'rgba(8,145,178,.08)',fill:true,tension:.4,borderWidth:2.5,pointRadius:3}]},options:{plugins:{legend:{display:false}},scales:{y:{grid:{color:'rgba(255,255,255,.04)'},max:100},x:{grid:{display:false},ticks:{font:{size:10},maxRotation:45}}}}});
+new Chart('cCRLT',{type:'bar',data:{labels:s.crlt_labels,datasets:[{label:'%',data:s.crlt_values,backgroundColor:s.crlt_values.map(v=>v>50?'rgba(239,68,68,.75)':'rgba(217,119,6,.75)'),borderRadius:4,borderWidth:0}]},options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(255,255,255,.04)'},max:100}}}});
+</script>
+{% endblock %}

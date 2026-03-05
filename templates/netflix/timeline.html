@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block title %}Évolution Temporelle — Netflix{% endblock %}
+{% block breadcrumb %}<span style="color:#E50914"><i class="fa-solid fa-circle-play" style="margin-right:4px"></i>Netflix</span> / Évolution Temporelle{% endblock %}
+{% block content %}
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px">
+  {% for val, label, color in [(s.first_year,'Première ajout','#475569'),(s.latest_year,'Dernier ajout','#059669'),(s.peak_year,'Année record','#E50914'),(s.peak_count,'Titres en record','#d97706')] %}
+  <div class="kpi" style="border-top:2px solid {{ color }}">
+    <div class="stat-num" data-count="{{ val }}" style="font-size:26px;color:#fff;margin-bottom:4px">0</div>
+    <div style="font-size:10px;color:#334155;font-weight:700;text-transform:uppercase">{{ label }}</div>
+  </div>
+  {% endfor %}
+</div>
+<div style="display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:12px">
+  <div class="card" style="padding:16px">
+    <div class="ct"><i class="fa-solid fa-chart-column" style="color:#E50914"></i>Ajouts annuels Films + Séries TV (stacked)</div>
+    <canvas id="cYA" height="200"></canvas>
+  </div>
+  <div class="card" style="padding:16px">
+    <div class="ct"><i class="fa-solid fa-calendar-days" style="color:#7c3aed"></i>Ajouts par mois de l'année</div>
+    <canvas id="cMA" height="200"></canvas>
+  </div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+  <div class="card" style="padding:16px">
+    <div class="ct"><i class="fa-solid fa-chart-line" style="color:#0891B2"></i>Croissance cumulée du catalogue</div>
+    <canvas id="cCum" height="180"></canvas>
+  </div>
+  <div class="card" style="padding:16px">
+    <div class="ct"><i class="fa-solid fa-hourglass-half" style="color:#d97706"></i>Délai sortie → ajout Netflix (années)</div>
+    <canvas id="cEC" height="180"></canvas>
+  </div>
+</div>
+<div class="card" style="padding:16px">
+  <div class="ct"><i class="fa-solid fa-film" style="color:#6366f1"></i>Sorties cinéma / séries depuis 1990 ajoutées sur Netflix</div>
+  <canvas id="cRY" height="130"></canvas>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const s = {{ s | tojson }};
+new Chart('cYA',{type:'bar',data:{labels:s.ya_years,datasets:[{label:'Films',data:s.ya_movies,backgroundColor:'rgba(229,9,20,.78)',borderRadius:3,borderWidth:0},{label:'Séries',data:s.ya_shows,backgroundColor:'rgba(124,58,237,.78)',borderRadius:3,borderWidth:0}]},options:{scales:{x:{stacked:true,grid:{display:false},ticks:{font:{size:10}}},y:{stacked:true,grid:{color:'rgba(255,255,255,.04)'}}}}});
+new Chart('cMA',{type:'bar',data:{labels:s.ma_months,datasets:[{label:'Ajouts',data:s.ma_counts,backgroundColor:BP,borderRadius:4,borderWidth:0}]},options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:9},maxRotation:45}},y:{grid:{color:'rgba(255,255,255,.04)'}}}}});
+new Chart('cCum',{type:'line',data:{labels:s.cum_years,datasets:[{label:'Total cumulé',data:s.cum_counts,borderColor:'#0891B2',backgroundColor:'rgba(8,145,178,.08)',fill:true,tension:.4,borderWidth:2.5,pointRadius:3}]},options:{plugins:{legend:{display:false}},scales:{y:{grid:{color:'rgba(255,255,255,.04)'}},x:{grid:{display:false},ticks:{font:{size:10}}}}}});
+new Chart('cEC',{type:'bar',data:{labels:s.ec_labels,datasets:[{label:'Titres',data:s.ec_counts,backgroundColor:'rgba(217,119,6,.75)',borderRadius:4,borderWidth:0}]},options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{grid:{color:'rgba(255,255,255,.04)'}}}}});
+new Chart('cRY',{type:'line',data:{labels:s.ry_years,datasets:[{label:'Sorties',data:s.ry_counts,borderColor:'#6366f1',backgroundColor:'rgba(99,102,241,.07)',fill:true,tension:.4,borderWidth:2,pointRadius:1.5}]},options:{plugins:{legend:{display:false}},scales:{y:{grid:{color:'rgba(255,255,255,.04)'}},x:{grid:{display:false},ticks:{font:{size:10},maxTicksLimit:12}}}}});
+</script>
+{% endblock %}
